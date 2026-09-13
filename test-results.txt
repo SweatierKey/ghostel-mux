@@ -1,0 +1,210 @@
+Ghostel 040
+
+make: Entering directory '/workspace/scratch/8a916eec262c/ghostel-mux'
+/workspace/scratch/8a916eec262c/run-emacs -Q --batch -l test/run-tests.el
+Warning: Lisp directory '/usr/share/emacs/29.3/lisp': No such file or directory
+Running 53 tests (2026-09-13 04:42:08+0300, selector ‘t’)
+   passed   1/53  mux-audit-outlives-scrollback-eviction (0.028047 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   2/53  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.047807 sec)
+   passed   3/53  mux-buffer-numbers-are-session-local-stable-across-windows-and-rename (0.008157 sec)
+   passed   4/53  mux-closing-pane-cleans-membership-and-renumbers-windows (0.003805 sec)
+   passed   5/53  mux-command-minibuffer-accepts-text-and-followup-prompt (0.003177 sec)
+   passed   6/53  mux-consult-session-selection-and-cancel-restore-ownership (0.034491 sec)
+   passed   7/53  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.008744 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Mark set
+   passed   8/53  mux-copy-drag-selection-persists-after-release (0.001360 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Copy mode: Press any key to exit
+   passed   9/53  mux-copy-indicators-follow-actual-input-mode (0.001772 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  10/53  mux-copy-is-persistent-and-never-deletes-output (0.001454 sec)
+   passed  11/53  mux-detach-restores-editor-and-keeps-processes (0.001326 sec)
+   passed  12/53  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000041 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  13/53  mux-encoder-fallback-does-not-double-broadcast (0.002550 sec)
+Emacs mode: terminal live, C-b g C-j to exit
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+   passed  14/53  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.002372 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  15/53  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.004832 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  16/53  mux-hidden-process-death-preserves-zoom-and-local-input (0.016791 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  17/53  mux-interactive-key-command-enters-broadcast-path (0.002726 sec)
+   passed  18/53  mux-layout-cycling-keeps-all-pane-buffers (0.004748 sec)
+   passed  19/53  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000085 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  20/53  mux-literal-prefix-is-encoded-on-each-pane (0.002444 sec)
+Warning (ghostel-mux): Recording stopped for pane shell: Opening output file: No such file or directory, /nonexistent/mux-test/output.log
+   passed  21/53  mux-log-error-is-visible-and-does-not-stop-terminal (0.001515 sec)
+Layout: tiled
+   passed  22/53  mux-meta-five-retiles-all-panes-even-from-zoom (0.032562 sec)
+Y:1 — SYNC:2 [P1,P2]; selected X:2 stays LOCAL (C-b a: activate its group)
+Layout: tiled
+Active group: X:2 — SYNC OFF (LOCAL)
+   passed  23/53  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.007291 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  24/53  mux-mouse-word-line-and-clear-keep-copy-mode (0.002150 sec)
+   passed  25/53  mux-names-do-not-escape-log-directory (0.001374 sec)
+   passed  26/53  mux-native-backend-remains-available-without-recording (0.015319 sec)
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+   passed  27/53  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.003517 sec)
+   passed  28/53  mux-number-migration-preserves-identities-and-is-idempotent (0.004967 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  29/53  mux-output-callbacks-and-auto-passwords-remain-local (0.002342 sec)
+one:1 — SYNC:2 [P1,P2]
+Warning (ghostel-mux): SYNC disabled after partial delivery: ((3 . "write failed"))
+   passed  30/53  mux-partial-delivery-turns-sync-off-without-retrying (0.002385 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  31/53  mux-paste-uses-each-terminal-encoder (0.002359 sec)
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  32/53  mux-prefix-and-copy-map-take-priority-in-char-mode (0.001614 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  33/53  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.002602 sec)
+   passed  34/53  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.002691 sec)
+   passed  35/53  mux-preview-cycles-layouts-without-attaching-or-capturing (0.006733 sec)
+   passed  36/53  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.083098 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  37/53  mux-real-keyboard-prefix-and-typing (0.017015 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  38/53  mux-real-terminal-modes-encode-arrow-independently (0.029692 sec)
+   passed  39/53  mux-recording-retains-raw-bytes-and-records-hidden-output (0.015754 sec)
+one:1 — SYNC PAUSED (LOCAL) · 1 visible
+   passed  40/53  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.001540 sec)
+   passed  41/53  mux-rename-minibuffer-accepts-prefix-command-letters (0.002005 sec)
+   passed  42/53  mux-render-uses-real-selection-not-redisplays-temporary-window (0.002759 sec)
+   passed  43/53  mux-session-rename-preserves-unrelated-colliding-buffer (0.001304 sec)
+   passed  44/53  mux-sessions-window-layouts-and-independent-terminals (0.005390 sec)
+   passed  45/53  mux-split-failure-preserves-layout-and-live-panes (0.001331 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  46/53  mux-status-distinguishes-selection-targets-and-local-input (0.003145 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  47/53  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.002626 sec)
+   passed  48/53  mux-which-key-discovers-both-native-prefixes (0.008738 sec)
+   passed  49/53  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.008088 sec)
+   passed  50/53  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.003371 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  51/53  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.003075 sec)
+   passed  52/53  mux-zoom-navigation-selects-another-live-buffer (0.002625 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  53/53  mux-zoom-survives-session-switch-and-keeps-sync (0.005003 sec)
+
+Ran 53 tests, 53 results as expected, 0 unexpected (2026-09-13 04:42:09+0300, 0.465091 sec)
+
+make: Leaving directory '/workspace/scratch/8a916eec262c/ghostel-mux'
+
+
+Ghostel 053
+
+make: Entering directory '/workspace/scratch/8a916eec262c/ghostel-mux'
+/workspace/scratch/8a916eec262c/run-emacs -Q --batch -l test/run-tests.el
+Warning: Lisp directory '/usr/share/emacs/29.3/lisp': No such file or directory
+Running 53 tests (2026-09-13 04:42:08+0300, selector ‘t’)
+   passed   1/53  mux-audit-outlives-scrollback-eviction (0.026575 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   2/53  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.041851 sec)
+   passed   3/53  mux-buffer-numbers-are-session-local-stable-across-windows-and-rename (0.009196 sec)
+   passed   4/53  mux-closing-pane-cleans-membership-and-renumbers-windows (0.004194 sec)
+   passed   5/53  mux-command-minibuffer-accepts-text-and-followup-prompt (0.004192 sec)
+   passed   6/53  mux-consult-session-selection-and-cancel-restore-ownership (0.036319 sec)
+   passed   7/53  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.009812 sec)
+Copy mode: C-b g C-t or C-b g C-j to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Mark set
+   passed   8/53  mux-copy-drag-selection-persists-after-release (0.003348 sec)
+Copy mode: C-b g C-t or C-b g C-j to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Copy mode: C-b g C-t or C-b g C-j to exit
+   passed   9/53  mux-copy-indicators-follow-actual-input-mode (0.002652 sec)
+Copy mode: C-b g C-t or C-b g C-j to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  10/53  mux-copy-is-persistent-and-never-deletes-output (0.001948 sec)
+   passed  11/53  mux-detach-restores-editor-and-keeps-processes (0.002026 sec)
+   passed  12/53  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000051 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  13/53  mux-encoder-fallback-does-not-double-broadcast (0.003232 sec)
+Emacs mode: terminal live, C-b g C-j to exit
+Char mode (M-RET to exit)
+Copy mode: C-b g C-t or C-b g C-j to exit
+   passed  14/53  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.003359 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  15/53  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.006537 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  16/53  mux-hidden-process-death-preserves-zoom-and-local-input (0.018203 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  17/53  mux-interactive-key-command-enters-broadcast-path (0.003405 sec)
+   passed  18/53  mux-layout-cycling-keeps-all-pane-buffers (0.006139 sec)
+   passed  19/53  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000098 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  20/53  mux-literal-prefix-is-encoded-on-each-pane (0.002602 sec)
+Warning (ghostel-mux): Recording stopped for pane shell: Opening output file: No such file or directory, /nonexistent/mux-test/output.log
+   passed  21/53  mux-log-error-is-visible-and-does-not-stop-terminal (0.001631 sec)
+Layout: tiled
+   passed  22/53  mux-meta-five-retiles-all-panes-even-from-zoom (0.035954 sec)
+Y:1 — SYNC:2 [P1,P2]; selected X:2 stays LOCAL (C-b a: activate its group)
+Layout: tiled
+Active group: X:2 — SYNC OFF (LOCAL)
+   passed  23/53  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.007601 sec)
+Copy mode: C-b g C-t or C-b g C-j to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  24/53  mux-mouse-word-line-and-clear-keep-copy-mode (0.001771 sec)
+   passed  25/53  mux-names-do-not-escape-log-directory (0.001368 sec)
+   passed  26/53  mux-native-backend-remains-available-without-recording (0.015749 sec)
+Char mode (M-RET to exit)
+Copy mode: C-b g C-t or C-b g C-j to exit
+   passed  27/53  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.003980 sec)
+   passed  28/53  mux-number-migration-preserves-identities-and-is-idempotent (0.005823 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  29/53  mux-output-callbacks-and-auto-passwords-remain-local (0.002939 sec)
+one:1 — SYNC:2 [P1,P2]
+Warning (ghostel-mux): SYNC disabled after partial delivery: ((3 . "write failed"))
+   passed  30/53  mux-partial-delivery-turns-sync-off-without-retrying (0.003452 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  31/53  mux-paste-uses-each-terminal-encoder (0.006426 sec)
+Char mode (M-RET to exit)
+Copy mode: C-b g C-t or C-b g C-j to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed  32/53  mux-prefix-and-copy-map-take-priority-in-char-mode (0.002198 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  33/53  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.002923 sec)
+   passed  34/53  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.002935 sec)
+   passed  35/53  mux-preview-cycles-layouts-without-attaching-or-capturing (0.008077 sec)
+   passed  36/53  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.083105 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  37/53  mux-real-keyboard-prefix-and-typing (0.017378 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  38/53  mux-real-terminal-modes-encode-arrow-independently (0.028388 sec)
+   passed  39/53  mux-recording-retains-raw-bytes-and-records-hidden-output (0.016747 sec)
+one:1 — SYNC PAUSED (LOCAL) · 1 visible
+   passed  40/53  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.001632 sec)
+   passed  41/53  mux-rename-minibuffer-accepts-prefix-command-letters (0.001900 sec)
+   passed  42/53  mux-render-uses-real-selection-not-redisplays-temporary-window (0.002693 sec)
+   passed  43/53  mux-session-rename-preserves-unrelated-colliding-buffer (0.001303 sec)
+   passed  44/53  mux-sessions-window-layouts-and-independent-terminals (0.005164 sec)
+   passed  45/53  mux-split-failure-preserves-layout-and-live-panes (0.001420 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  46/53  mux-status-distinguishes-selection-targets-and-local-input (0.003066 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  47/53  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.002696 sec)
+   passed  48/53  mux-which-key-discovers-both-native-prefixes (0.008559 sec)
+   passed  49/53  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.008914 sec)
+   passed  50/53  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.003574 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  51/53  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.007376 sec)
+   passed  52/53  mux-zoom-navigation-selects-another-live-buffer (0.002757 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  53/53  mux-zoom-survives-session-switch-and-keeps-sync (0.005424 sec)
+
+Ran 53 tests, 53 results as expected, 0 unexpected (2026-09-13 04:42:09+0300, 0.493204 sec)
+
+make: Leaving directory '/workspace/scratch/8a916eec262c/ghostel-mux'

@@ -1,0 +1,13 @@
+;;; run-tests.el --- Batch entry point -*- lexical-binding: t; -*-
+(require 'package)
+(package-initialize)
+(let ((root (file-name-directory (directory-file-name (file-name-directory load-file-name)))))
+  (add-to-list 'load-path root)
+  (dolist (name '("COMPAT_LISP" "WHICH_KEY_LISP" "GHOSTEL_LISP"))
+    (when-let ((dir (getenv name))) (add-to-list 'load-path (expand-file-name dir))))
+  (when-let ((dir (getenv "GHOSTEL_MODULE_DIR")))
+    (setq ghostel-module-directory (expand-file-name dir)))
+  (setq ghostel-module-auto-install nil)
+  (require 'ghostel)
+  (load (expand-file-name "test/ghostel-mux-tests.el" root) nil t))
+(ert-run-tests-batch-and-exit)
