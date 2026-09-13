@@ -8,6 +8,34 @@ distinti per terminale.
 Ogni pannello è un vero buffer Ghostel. Sessioni e finestre conservano i layout
 Emacs e i buffer; cambiare sessione o fare zoom non ricrea le shell.
 
+## Demo
+
+![Ghostel Mux: split, SYNC, zoom locale e anteprime Consult](docs/media/demo.gif)
+
+[Guarda o scarica il video MP4](docs/media/demo.mp4) ·
+[Schermate e dettagli della demo](docs/media/README.md)
+
+Demo reale in Emacs terminale, con shell locali e tema Wombat.
+La sequenza mostra split, SYNC sui pannelli visibili, sospensione durante
+lo zoom, anteprime di finestre e sessioni e copy mode.
+
+<details>
+<summary>Schermate: SYNC, zoom e anteprima delle sessioni</summary>
+
+**SYNC: i marker `[S]` indicano i destinatari.**
+
+![Tre shell visibili ricevono lo stesso comando](docs/media/sync.png)
+
+**Zoom: l'input resta nel solo pannello visibile.**
+
+![Pannello ingrandito con SYNC PAUSED LOCAL nella barra](docs/media/zoom.png)
+
+**Consult: anteprima del layout prima di cambiare sessione.**
+
+![Selettore di sessioni con anteprima e input terminale bloccato](docs/media/session-preview.png)
+
+</details>
+
 ## Requisiti e installazione
 
 - Emacs **29.1 o successivo** con supporto ai moduli dinamici.
