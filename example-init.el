@@ -32,4 +32,8 @@
 ;; C-b P: pane buffer preview with Consult.
 ;; (setq ghostel-mux-pane-preview nil) ; disable pane previews only
 
+;; C-b b: tree; C-b m: move pane; C-b M: move window; C-b A: auto tiling.
+;; Auto tiling is enabled by default. To start with manual layouts instead:
+;; (setq ghostel-mux-auto-tile nil)
+
 ;;; example-init.el ends here

@@ -1,3 +1,18 @@
+# 0.2.0
+
+- Albero sessioni/finestre/pannelli (`C-b b`), con navigazione, rami
+  comprimibili, spostamento dalla riga corrente e stato del tiling.
+- Spostamento reale dei pannelli (`C-b m`) fra finestre o sessioni e delle
+  finestre (`C-b M`) fra sessioni. Processi e log conservati; appartenenza,
+  nomi e numeri aggiornati; contenitori vuoti rimossi e SYNC disattivata
+  nei gruppi modificati. Validazione delle destinazioni prima del trasferimento.
+- Tiling automatico predefinito dopo creazione/chiusura, con scelta per
+  finestra (`C-b A`) e resize manuale valido fino al prossimo ricalcolo.
+  Le chiusure fuori dal pannello zoomato non interrompono lo zoom.
+- Stato esterno alle strutture esistenti per permettere il reload a caldo.
+- 72 test superati su Ghostel 0.40.0 e 0.53.0, compilazione Lisp e prova
+  interattiva TTY; verificato il reload 0.1.9 → 0.2.0 con processi aperti.
+
 # 0.1.9
 
 - Indicatore `[S]` prima del nome per i destinatari effettivi del broadcast

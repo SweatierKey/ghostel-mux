@@ -1,7 +1,7 @@
 # Installazione e aggiornamenti con Git
 
 Repository: [SweatierKey/ghostel-mux](https://github.com/SweatierKey/ghostel-mux).
-Il ramo di lavoro è `main`; contiene la versione 0.1.9 e le istruzioni
+Il ramo di lavoro è `main`; contiene la versione 0.2.0 e le istruzioni
 aggiornate. La cronologia conserva separatamente la base e gli ultimi fix:
 
 | Versione | Commit |
@@ -42,7 +42,8 @@ ghostel-mux RET` mostra il file trovato nel `load-path`.
 
 ## Aggiornamenti successivi
 
-Dal clone:
+Dal clone (qui `~/src/ghostel-mux`, come nella migrazione sopra; per la
+nuova installazione del README usa `~/.emacs.d/lisp/ghostel-mux`):
 
 ```sh
 git -C ~/src/ghostel-mux status --short

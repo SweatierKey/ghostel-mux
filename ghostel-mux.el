@@ -1,6 +1,6 @@
 ;;; ghostel-mux.el --- Tmux-style workspaces for Ghostel -*- lexical-binding: t; -*-
 
-;; Version: 0.1.9
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "29.1") (ghostel "0.40.0"))
 ;; Keywords: terminals, convenience
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -283,10 +283,364 @@ An empty palette disables accents.  Built-in accents require 89 colors."
   (let ((s (string-trim (read-string prompt initial))))
     (when (string-empty-p s) (user-error "Name cannot be empty")) s))
 
+;;; Workspace ownership and automatic layouts
+(defcustom ghostel-mux-auto-tile t
+  "Automatically tile after pane creation or removal.
+Each window can override this with `ghostel-mux-toggle-auto-tile'.
+Manual resizing lasts until the next pane topology change."
+  :type 'boolean :group 'ghostel-mux)
+;; External tables keep existing struct instances valid on live reload.
+(defvar ghostel-mux--auto-tiles (make-hash-table :test #'eq :weakness 'key))
+(defvar ghostel-mux--layouts (make-hash-table :test #'eq :weakness 'key))
+(defvar ghostel-mux--dirty-layouts (make-hash-table :test #'eq :weakness 'key))
+
+(defun ghostel-mux--auto-tile-p (w)
+  (gethash w ghostel-mux--auto-tiles ghostel-mux-auto-tile))
+(defun ghostel-mux--tree-active-p (&optional frame)
+  (eq (window-buffer (frame-selected-window frame)) (get-buffer "*Ghostel Mux Tree*")))
+(defun ghostel-mux--known-window-p (w)
+  (and (ghostel-mux--window-p w)
+       (memq (ghostel-mux--window-session w) ghostel-mux--sessions)
+       (memq w (ghostel-mux--session-windows (ghostel-mux--window-session w)))))
+
+(defun ghostel-mux--build-layout (w panes &optional frame)
+  "Build and validate a tiled state without changing W or its ownership.
+Use FRAME's dimensions.  No shell is created or destroyed."
+  (when panes
+    (with-selected-frame (or frame (selected-frame))
+      (save-window-excursion
+        (let ((ghostel-mux--restoring t))
+          (delete-other-windows)
+          (ghostel-mux--tile (selected-window) panes (gethash w ghostel-mux--layouts "tiled"))
+          (balance-windows)
+          (dolist (win (window-list nil 'no-minibuffer))
+            (set-window-parameter win 'ghostel-mux-pane-id
+                                  (ghostel-mux--pane-id
+                                   (buffer-local-value 'ghostel-mux--pane (window-buffer win)))))
+          (window-state-get (frame-root-window)))))))
+
+(defun ghostel-mux--apply-pending-layout (w)
+  "Rebuild dirty geometry once W is displayed, deferring while zoomed."
+  (when (and (gethash w ghostel-mux--dirty-layouts)
+             (not (ghostel-mux--window-zoom-state w)))
+    (condition-case err
+        (progn
+          (setf (ghostel-mux--window-state w)
+                (ghostel-mux--build-layout w (ghostel-mux--window-panes w)))
+          (remhash w ghostel-mux--dirty-layouts))
+      (error
+       ;; Keep the last valid layout and all shells if the frame is too small.
+       (setf (ghostel-mux--window-sync w) nil)
+       (message "Mux tiling deferred (SYNC OFF): %s" (error-message-string err))))))
+
+(defun ghostel-mux-toggle-auto-tile (&optional window)
+  "Toggle automatic tiling for WINDOW, or the active Mux window."
+  (interactive)
+  (let* ((w (or window (ghostel-mux--require-window)))
+         (on (not (ghostel-mux--auto-tile-p w))))
+    (puthash w on ghostel-mux--auto-tiles)
+    (if on (puthash w t ghostel-mux--dirty-layouts)
+      (remhash w ghostel-mux--dirty-layouts))
+    (unless (ghostel-mux--tree-active-p)
+      (when (eq w (ghostel-mux--current-window)) (ghostel-mux--restore w)))
+    (ghostel-mux--refresh)
+    (message "%s: AUTO TILE %s" (ghostel-mux--group-name w) (if on "ON" "OFF"))))
+
+(defun ghostel-mux--auto-split ()
+  "Create a pane without requiring space in the selected leaf window."
+  (let* ((w (ghostel-mux--require-window))
+         (ps (ghostel-mux--window-panes w)) (pane nil))
+    ;; Preflight the extra leaf with a live existing buffer before spawning.
+    (ghostel-mux--build-layout w (append ps (list (car ps))))
+    (condition-case err
+        (let* ((p (setq pane (ghostel-mux--new-pane w)))
+               (panes (append ps (list p)))
+               (state (ghostel-mux--build-layout w panes)))
+          (setf (ghostel-mux--window-panes w) panes
+                (ghostel-mux--window-state w) state
+                (ghostel-mux--window-zoom-state w) nil
+                (ghostel-mux--window-zoom-pane w) nil
+                (ghostel-mux--window-active w) p)
+          (remhash w ghostel-mux--dirty-layouts)
+          (ghostel-mux--restore w))
+      ((error quit)
+       (when (and pane (not (memq pane (ghostel-mux--window-panes w)))
+                  (buffer-live-p (ghostel-mux--pane-buffer pane)))
+         (let ((ghostel-mux--closing t) (ghostel-query-before-killing nil))
+           (kill-buffer (ghostel-mux--pane-buffer pane))))
+       (signal (car err) (cdr err))))))
+
+(defun ghostel-mux--read-destination (pane)
+  "Choose a destination session or window for PANE."
+  (let (choices)
+    (dolist (s ghostel-mux--sessions)
+      (push (cons (format "%s / [new window]" (ghostel-mux--session-name s)) s) choices)
+      (dolist (w (ghostel-mux--session-windows s))
+        (unless (eq w (ghostel-mux--pane-window pane))
+          (push (cons (format "%s / %d: %s" (ghostel-mux--session-name s)
+                              (ghostel-mux--window-number w) (ghostel-mux--window-title w)) w) choices))))
+    (cdr (assoc (completing-read "Move pane to: " (nreverse choices) nil t) choices))))
+
+(defun ghostel-mux--read-target-session (source)
+  (let ((choices (mapcar (lambda (s) (cons (ghostel-mux--session-name s) s))
+                        (delq source (copy-sequence ghostel-mux--sessions)))))
+    (unless choices (user-error "Create another session first"))
+    (cdr (assoc (completing-read "Move window to session: " choices nil t) choices))))
+
+(defun ghostel-mux--prepare-move (sessions)
+  "Validate affected frames and capture their current layouts before moving."
+  (when (active-minibuffer-window) (user-error "Finish the minibuffer before moving"))
+  (dolist (s (delete-dups (copy-sequence sessions)))
+    (unless (memq s ghostel-mux--sessions) (user-error "Session no longer exists"))
+    (when-let ((f (ghostel-mux--session-frame s)))
+      (when (frame-live-p f)
+        (when (or (frame-parameter f 'ghostel-mux-preview) (active-minibuffer-window))
+          (user-error "Finish selection in the affected frame first"))
+        (with-selected-frame f (ghostel-mux--capture))))))
+
+(defun ghostel-mux--prune-window (w)
+  "Remove empty W and repair session navigation references."
+  (let ((s (ghostel-mux--window-session w)))
+    (unless (ghostel-mux--window-panes w)
+      (setf (ghostel-mux--session-windows s) (delq w (ghostel-mux--session-windows s))))
+    (unless (memq (ghostel-mux--session-current s) (ghostel-mux--session-windows s))
+      (setf (ghostel-mux--session-current s) (car (ghostel-mux--session-windows s))))
+    (unless (memq (ghostel-mux--session-previous s) (ghostel-mux--session-windows s))
+      (setf (ghostel-mux--session-previous s) nil))))
+
+(defun ghostel-mux--finish-move (sessions)
+  "Restore affected attached layouts, removing sessions left empty."
+  (dolist (s (delete-dups (copy-sequence sessions)))
+    (let ((f (ghostel-mux--session-frame s)))
+      (if (ghostel-mux--session-windows s)
+          (when (and f (frame-live-p f) (not (ghostel-mux--tree-active-p f)))
+            (with-selected-frame f
+              (ghostel-mux--restore (ghostel-mux--session-current s))))
+        (when (and f (frame-live-p f))
+          (with-selected-frame f
+            (if (ghostel-mux--tree-active-p)
+                (set-frame-parameter f 'ghostel-mux-session nil)
+              (let ((ghostel-mux--restoring t)) (ghostel-mux-detach)))))
+        (setf (ghostel-mux--session-frame s) nil)
+        (setq ghostel-mux--sessions (delq s ghostel-mux--sessions)))))
+  (ghostel-mux--refresh))
+
+(defun ghostel-mux-move-pane (destination &optional pane)
+  "Move PANE to DESTINATION without restarting its process.
+DESTINATION is a window, or a session in which to create a new window.
+Interactive use follows the moved pane; the tree stays open when used there.
+Both affected windows have SYNC disabled.  Their pane layouts are rebuilt."
+  (interactive (list (ghostel-mux--read-destination (ghostel-mux--require-pane))))
+  (let* ((p (or pane (ghostel-mux--require-pane)))
+         (source (ghostel-mux--pane-window p))
+         (s1 (ghostel-mux--window-session source))
+         (new (ghostel-mux--session-p destination))
+         (s2 (if new destination (and (ghostel-mux--window-p destination)
+                                      (ghostel-mux--window-session destination))))
+         (tree (ghostel-mux--tree-active-p)))
+    (unless (and (ghostel-mux--known-window-p source) (ghostel-mux--pane-live-p p)
+                 (memq p (ghostel-mux--window-panes source))
+                 (or new (ghostel-mux--known-window-p destination)))
+      (user-error "Source or destination is no longer available"))
+    (when (eq source destination) (user-error "Pane already belongs to this window"))
+    (ghostel-mux--prepare-move (list s1 s2))
+    (let* ((target (if new (ghostel-mux--make-window :id (ghostel-mux--id) :session s2
+                                                    :directory (ghostel-mux--session-directory s2)) destination))
+           (from (delq p (copy-sequence (ghostel-mux--window-panes source))))
+           (to (append (ghostel-mux--window-panes target) (list p)))
+           ;; All geometry is validated before changing the ownership graph.
+           (from-state (ghostel-mux--build-layout source from (ghostel-mux--session-frame s1)))
+           (to-state (ghostel-mux--build-layout target to (ghostel-mux--session-frame s2))))
+      (setf (ghostel-mux--window-panes source) from
+            (ghostel-mux--window-panes target) to
+            (ghostel-mux--pane-window p) target)
+      (when new
+        (setf (ghostel-mux--session-windows s2) (append (ghostel-mux--session-windows s2) (list target))))
+      (setf (ghostel-mux--window-active target) p)
+      (dolist (w (list source target))
+        (setf (ghostel-mux--window-sync w) nil
+              (ghostel-mux--window-zoom-state w) nil
+              (ghostel-mux--window-zoom-pane w) nil
+              (ghostel-mux--window-previous w) nil)
+        (unless (memq (ghostel-mux--window-active w) (ghostel-mux--window-panes w))
+          (setf (ghostel-mux--window-active w) (car (ghostel-mux--window-panes w))))
+        (remhash w ghostel-mux--dirty-layouts))
+      (setf (ghostel-mux--window-state source) from-state
+            (ghostel-mux--window-state target) to-state)
+      (unless (eq s1 s2)
+        (with-current-buffer (ghostel-mux--pane-buffer p)
+          (setq ghostel-mux--session-number (ghostel-mux--next-session-number s2)))
+        (ghostel-mux--rename-session-buffers s2))
+      (ghostel-mux--prune-window source)
+      (ghostel-mux--finish-move (list s1 s2))
+      (unless tree (ghostel-mux--select-pane p))
+      (message "Pane moved to %s; affected windows SYNC OFF" (ghostel-mux--group-name target))
+      p)))
+
+(defun ghostel-mux--validate-window-transfer (w destination)
+  "Check W's normal and zoom layouts in DESTINATION's frame before moving."
+  (with-selected-frame (or (ghostel-mux--session-frame destination) (selected-frame))
+    (save-window-excursion
+      (let ((ghostel-mux--restoring t))
+        (dolist (state (list (ghostel-mux--window-state w)
+                            (ghostel-mux--window-zoom-state w)))
+          (when state
+            (delete-other-windows)
+            (window-state-put state (frame-root-window) 'safe)))))))
+
+(defun ghostel-mux-move-window (destination &optional window)
+  "Move WINDOW and all its live panes to session DESTINATION.
+Keep processes, logs, layout and zoom.  Disable this window's SYNC."
+  (interactive (list (ghostel-mux--read-target-session (ghostel-mux--current-session))))
+  (let* ((w (or window (ghostel-mux--require-window)))
+         (source (ghostel-mux--window-session w))
+         (tree (ghostel-mux--tree-active-p)))
+    (unless (ghostel-mux--known-window-p w) (user-error "Window no longer exists"))
+    (when (eq source destination) (user-error "Window already belongs to this session"))
+    (ghostel-mux--prepare-move (list source destination))
+    (ghostel-mux--validate-window-transfer w destination)
+    (setf (ghostel-mux--session-windows source) (delq w (ghostel-mux--session-windows source))
+          (ghostel-mux--session-windows destination)
+          (append (ghostel-mux--session-windows destination) (list w))
+          (ghostel-mux--window-session w) destination
+          (ghostel-mux--window-sync w) nil)
+    ;; Prune navigation in the old parent after the reparenting.
+    (unless (memq (ghostel-mux--session-current source) (ghostel-mux--session-windows source))
+      (setf (ghostel-mux--session-current source) (car (ghostel-mux--session-windows source))))
+    (when (eq (ghostel-mux--session-previous source) w)
+      (setf (ghostel-mux--session-previous source) nil))
+    (dolist (p (ghostel-mux--window-panes w))
+      (with-current-buffer (ghostel-mux--pane-buffer p)
+        (setq ghostel-mux--session-number (ghostel-mux--next-session-number destination))))
+    (ghostel-mux--rename-session-buffers destination)
+    (ghostel-mux--finish-move (list source destination))
+    (unless tree (ghostel-mux--switch-window w))
+    (message "Window moved to %s; SYNC OFF" (ghostel-mux--group-name w))
+    w))
+
+;;; Workspace tree
+(defvar-local ghostel-mux--tree-folded nil)
+(defvar ghostel-mux-tree-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'ghostel-mux-tree-visit)
+    (define-key map (kbd "TAB") #'ghostel-mux-tree-toggle)
+    (define-key map (kbd "m") #'ghostel-mux-tree-move)
+    (define-key map (kbd "a") #'ghostel-mux-tree-auto-tile)
+    (define-key map (kbd "g") #'ghostel-mux-tree-refresh)
+    (define-key map (kbd "q") #'ghostel-mux-tree-quit)
+    (define-key map (kbd "n") #'next-line)
+    (define-key map (kbd "p") #'previous-line)
+    map))
+(define-derived-mode ghostel-mux-tree-mode special-mode "Mux Tree"
+  "Browse and reparent live sessions, windows and panes."
+  (setq-local truncate-lines t))
+
+(defun ghostel-mux--tree-node ()
+  (or (get-text-property (line-beginning-position) 'ghostel-mux-node)
+      (user-error "Select a session, window or pane row")))
+(defun ghostel-mux--tree-row (object text &optional face)
+  (insert (propertize (concat text "\n") 'ghostel-mux-node object 'face face)))
+(defun ghostel-mux-tree-refresh ()
+  "Refresh the ownership tree, retaining selection and collapsed branches."
+  (interactive)
+  (let ((node (get-text-property (line-beginning-position) 'ghostel-mux-node))
+        (line (line-number-at-pos)) (inhibit-read-only t))
+    (erase-buffer)
+    (insert "GHOSTEL MUX — SESSIONS / WINDOWS / PANES\n"
+            "RET visit · TAB fold · m move · a auto tile · g refresh · q return\n\n")
+    (dolist (s ghostel-mux--sessions)
+      (ghostel-mux--tree-row s (format "%s %s" (if (memq s ghostel-mux--tree-folded) "+" "−")
+                                       (ghostel-mux--session-name s))
+                            (and ghostel-mux-session-colors (ghostel-mux--session-color s)))
+      (unless (memq s ghostel-mux--tree-folded)
+        (dolist (w (ghostel-mux--session-windows s))
+          (ghostel-mux--tree-row w
+           (format "  %s %d: %s  [%s%s%s]" (if (memq w ghostel-mux--tree-folded) "+" "−")
+                   (ghostel-mux--window-number w) (ghostel-mux--window-title w)
+                   (if (ghostel-mux--auto-tile-p w) "AUTO TILE" "MANUAL")
+                   (if (ghostel-mux--window-sync w) " · SYNC enabled" " · SYNC off")
+                   (if (ghostel-mux--window-zoom-state w) " · ZOOM" "")) 'bold)
+          (unless (memq w ghostel-mux--tree-folded)
+            (dolist (p (ghostel-mux--window-panes w))
+              (ghostel-mux--tree-row p
+               (format "      P%d / B%d  %s  %s" (ghostel-mux--pane-number p)
+                       (ghostel-mux--buffer-number p) (ghostel-mux--pane-title p)
+                       (if (ghostel-mux--pane-live-p p) "" "[EXIT]"))))))))
+    (goto-char (or (and node (text-property-any (point-min) (point-max) 'ghostel-mux-node node))
+                   (point-min)))
+    (unless node (forward-line (max 3 (1- line))))
+    (set-buffer-modified-p nil)))
+
+(defun ghostel-mux-tree ()
+  "Show the live ownership tree in this frame, keeping the terminal layout."
+  (interactive)
+  (let ((node (or ghostel-mux--pane (ghostel-mux--current-window))))
+    (unless (ghostel-mux--tree-active-p)
+      (ghostel-mux--capture)
+      (set-frame-parameter nil 'ghostel-mux-tree-return (current-window-configuration))
+      (let ((ghostel-mux--restoring t))
+        (delete-other-windows)
+        (switch-to-buffer (get-buffer-create "*Ghostel Mux Tree*"))
+        (unless (derived-mode-p 'ghostel-mux-tree-mode) (ghostel-mux-tree-mode)))
+      (let* ((w (if (ghostel-mux--pane-p node) (ghostel-mux--pane-window node) node))
+             (s (and w (ghostel-mux--window-session w))))
+        (setq ghostel-mux--tree-folded (delq s (delq w ghostel-mux--tree-folded)))))
+    (ghostel-mux-tree-refresh)
+    (when-let ((pos (and node (text-property-any (point-min) (point-max) 'ghostel-mux-node node))))
+      (goto-char pos))))
+
+(defun ghostel-mux-tree-toggle ()
+  (interactive)
+  (let ((node (ghostel-mux--tree-node)))
+    (when (or (ghostel-mux--session-p node) (ghostel-mux--window-p node))
+      (if (memq node ghostel-mux--tree-folded)
+          (setq ghostel-mux--tree-folded (delq node ghostel-mux--tree-folded))
+        (push node ghostel-mux--tree-folded))
+      (ghostel-mux-tree-refresh))))
+(defun ghostel-mux-tree-quit ()
+  (interactive)
+  (let ((config (frame-parameter nil 'ghostel-mux-tree-return))
+        (s (ghostel-mux--current-session)) (ghostel-mux--restoring t))
+    (set-frame-parameter nil 'ghostel-mux-tree-return nil)
+    (cond ((and (memq s ghostel-mux--sessions) (ghostel-mux--session-current s))
+           (ghostel-mux--restore (ghostel-mux--session-current s)))
+          (config (set-window-configuration config))
+          (t (switch-to-buffer (get-buffer-create "*scratch*"))))))
+(defun ghostel-mux-tree-visit ()
+  (interactive)
+  (let ((node (ghostel-mux--tree-node))
+        (return-state (frame-parameter nil 'ghostel-mux-return-state))
+        (ghostel-mux--restoring t))
+    (cond ((and (ghostel-mux--pane-p node) (memq node (ghostel-mux--all-panes)))
+           (ghostel-mux--attach (ghostel-mux--window-session (ghostel-mux--pane-window node))
+                                (ghostel-mux--pane-window node))
+           (ghostel-mux--select-pane node))
+          ((ghostel-mux--known-window-p node) (ghostel-mux--switch-window node))
+          ((memq node ghostel-mux--sessions) (ghostel-mux--attach node))
+          (t (user-error "Entry no longer exists; refresh the tree")))
+    (when return-state (set-frame-parameter nil 'ghostel-mux-return-state return-state))
+    (set-frame-parameter nil 'ghostel-mux-tree-return nil)))
+(defun ghostel-mux-tree-move ()
+  (interactive)
+  (let ((node (ghostel-mux--tree-node)))
+    (cond ((ghostel-mux--pane-p node)
+           (ghostel-mux-move-pane (ghostel-mux--read-destination node) node))
+          ((ghostel-mux--window-p node)
+           (ghostel-mux-move-window
+            (ghostel-mux--read-target-session (ghostel-mux--window-session node)) node))
+          (t (user-error "Select a pane or window to move")))))
+(defun ghostel-mux-tree-auto-tile ()
+  (interactive)
+  (let* ((node (ghostel-mux--tree-node))
+         (w (if (ghostel-mux--pane-p node) (ghostel-mux--pane-window node) node)))
+    (unless (ghostel-mux--known-window-p w) (user-error "Select a window or pane"))
+    (ghostel-mux-toggle-auto-tile w)))
+
 ;;; Layout ownership
 (defun ghostel-mux--capture ()
   "Capture the attached layout, keeping the unzoomed state separately."
-  (unless (or ghostel-mux--restoring (frame-parameter nil 'ghostel-mux-preview))
+  (unless (or ghostel-mux--restoring (ghostel-mux--tree-active-p)
+              (frame-parameter nil 'ghostel-mux-preview))
     (when-let ((w (ghostel-mux--current-window)))
       (dolist (win (window-list))
         (let ((p (buffer-local-value 'ghostel-mux--pane (window-buffer win))))
@@ -298,6 +652,7 @@ An empty palette disables accents.  Built-in accents require 89 colors."
 
 (defun ghostel-mux--restore (w)
   "Restore W's layout in the current frame."
+  (ghostel-mux--apply-pending-layout w)
   (let ((ghostel-mux--restoring t))
     (delete-other-windows)
     (let ((state (ghostel-mux--window-state w))
@@ -663,7 +1018,7 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
           (ghostel-mux--window-zoom-pane w) nil)
     (ghostel-mux--restore w)))
 
-(defun ghostel-mux--split (side)
+(defun ghostel-mux--manual-split (side)
   (let* ((p (ghostel-mux--require-pane)) (w (ghostel-mux--pane-window p)))
     (unless (eq w (ghostel-mux--current-window)) (user-error "Attach this pane's session first"))
     (ghostel-mux--unzoom w)
@@ -683,6 +1038,11 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
          (when (window-live-p new) (delete-window new))
          (select-window old)
          (signal (car err) (cdr err)))))))
+(defun ghostel-mux--split (side)
+  (let* ((p (ghostel-mux--require-pane)) (w (ghostel-mux--pane-window p)))
+    (unless (eq w (ghostel-mux--current-window)) (user-error "Attach this pane's session first"))
+    (if (ghostel-mux--auto-tile-p w) (ghostel-mux--auto-split)
+      (ghostel-mux--manual-split side))))
 (defun ghostel-mux-split-right () (interactive) (ghostel-mux--split 'right))
 (defun ghostel-mux-split-below () (interactive) (ghostel-mux--split 'below))
 
@@ -790,6 +1150,8 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
           (delete-other-windows)
           (ghostel-mux--tile (selected-window) ps layout)
           (balance-windows)
+          (puthash w layout ghostel-mux--layouts)
+          (remhash w ghostel-mux--dirty-layouts)
           (ghostel-mux--capture) (ghostel-mux--refresh))
       (error (window-state-put saved (frame-root-window) 'safe)
              (signal (car err) (cdr err))))))
@@ -890,6 +1252,7 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
               (with-current-buffer (window-buffer (selected-window))
                 (ghostel-mux--capture)))))
         (setf (ghostel-mux--window-panes w) (delq p (ghostel-mux--window-panes w)))
+        (when (ghostel-mux--auto-tile-p w) (puthash w t ghostel-mux--dirty-layouts))
         (when (eq p (ghostel-mux--window-active w))
           (setf (ghostel-mux--window-active w) (car (ghostel-mux--window-panes w))))
         (when (eq p (ghostel-mux--window-zoom-pane w))
@@ -910,6 +1273,8 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
     (cond
      ((and frame (frame-parameter frame 'ghostel-mux-preview))
       (set-frame-parameter frame 'ghostel-mux-preview-reconcile t))
+     ((and frame (ghostel-mux--tree-active-p frame))
+      (unless (ghostel-mux--session-windows s) (ghostel-mux--finish-move (list s))))
      ((null (ghostel-mux--session-windows s))
         (progn
           (when (and frame (frame-live-p frame))
@@ -1221,7 +1586,8 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                                   (truncate-string-to-width (ghostel-mux--window-title other) 18 nil nil t)
                                   (if (eq other w) "*" "")))
                         (ghostel-mux--session-windows s) "  ")
-             (if (ghostel-mux--window-zoom-state w) "ZOOM " "")
+             (concat (if (ghostel-mux--auto-tile-p w) "AUTO TILE " "MANUAL ")
+                     (if (ghostel-mux--window-zoom-state w) "ZOOM " ""))
              (if (ghostel-mux--pane-log-error p) "LOG ERROR " "")
              (if (ghostel-mux--pane-live-p p) "" "EXIT ")
              (format-time-string "%H:%M %d-%b-%y"))
@@ -1285,6 +1651,12 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
       (dolist (win (window-list frame 'no-minibuffer))
         (let ((p (buffer-local-value 'ghostel-mux--pane (window-buffer win))))
           (set-window-parameter win 'ghostel-mux-pane-id (and p (ghostel-mux--pane-id p))))))
+    ;; Rebuilding a nonselected buffer during completion resets window-point.
+    ;; Defer until the minibuffer closes so cancellation returns to the same row.
+    (unless (active-minibuffer-window)
+      (when-let ((tree (get-buffer "*Ghostel Mux Tree*")))
+        (with-current-buffer tree
+          (when (derived-mode-p 'ghostel-mux-tree-mode) (ghostel-mux-tree-refresh)))))
     (force-mode-line-update t)))
 
 (defun ghostel-mux--tick ()
@@ -1324,7 +1696,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                     "rename-session" "rename-window" "rename-pane" "kill-session" "kill-window"
                     "split-right" "split-below" "toggle-sync" "zoom" "layout" "layout-tiled"
                     "balance" "open-log" "attach-pane-session" "next-pane" "previous-pane"
-                    "export-scrollback" "detach" "doctor"))
+                    "export-scrollback" "detach" "doctor" "tree" "move-pane" "move-window" "toggle-auto-tile"))
          (name (completing-read "Mux command: " choices nil t)))
     (call-interactively (intern (concat "ghostel-mux-" name)))))
 (defun ghostel-mux-help ()
@@ -1337,6 +1709,9 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
     (princ "Panes:    % split right   \" split below   arrows select   o/O next/prev   ; last   q numbers   P list\n")
     (princ "          z zoom   x close   M-5 tiled   Space next layout   T rename pane\n")
     (princ "          : balance (or Emacs C-x +) balances the current arrangement\n")
+    (princ "Tree:     b tree (RET visit, TAB fold, m move, a auto tile, q return)\n")
+    (princ "Move:     m pane to window/session   M window to session (SYNC OFF after move)\n")
+    (princ "Tiling:   A toggle automatic tiling; manual sizes last until next add/remove\n")
     (princ "Input:    y SYNC toggle   C-b literal C-b   ] paste\n")
     (princ "History:  [ copy mode   = copy entire retained scrollback   e export   L raw log\n")
     (princ "Copy:     M-w copy/stay   C-w copy/exit   C-g clear selection   q exit\n")
@@ -1367,6 +1742,8 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                  ("SPC" . ghostel-mux-next-layout) ("t" . ghostel-mux-clock)
                  ("M-5" . ghostel-mux-layout-tiled)
                  ("T" . ghostel-mux-rename-pane)
+                 ("b" . ghostel-mux-tree) ("m" . ghostel-mux-move-pane)
+                 ("M" . ghostel-mux-move-window) ("A" . ghostel-mux-toggle-auto-tile)
                  ("y" . ghostel-mux-toggle-sync)
                  ("]" . ghostel-mux-paste) ("[" . ghostel-mux-copy-mode)
                  ("=" . ghostel-copy-all) ("e" . ghostel-mux-export-scrollback)

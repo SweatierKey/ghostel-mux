@@ -1,4 +1,4 @@
-# Ghostel Mux 0.1.9
+# Ghostel Mux 0.2.0
 
 Un multiplexer per Emacs costruito sopra Ghostel, con sessioni, finestre e
 pannelli. Riprende il flusso di lavoro e la configurazione tmux fornita:
@@ -173,10 +173,90 @@ Questo blocco sostituisce le precedenti forme dedicate a Mux per
 `example-init.el` contiene la stessa configurazione e le opzioni principali.
 Il pacchetto non installa dipendenze né modifica la tua configurazione da solo.
 
+## Albero, spostamenti e tiling automatico (0.2.0)
+
+La gerarchia è **sessione → finestra Mux → pannello**. Ogni pannello ha un
+solo proprietario: mostrarne il buffer altrove con `switch-to-buffer` non
+cambia l'appartenenza; i nuovi comandi di spostamento la cambiano davvero.
+
+| Tasti | Azione |
+|---|---|
+| `C-b b` | Apre l'albero di tutte le sessioni, finestre e pannelli |
+| `C-b m` | Sposta il pannello selezionato in un'altra finestra, anche di un'altra sessione |
+| `C-b M` | Sposta l'intera finestra nella sessione scelta |
+| `C-b A` | Attiva/disattiva il tiling automatico della finestra corrente |
+
+Nell'albero: `n`/`p` o frecce per muoversi, `TAB` per espandere/comprimere,
+`RET` per aprire l'oggetto nel suo layout, `m` per spostare la finestra o il
+pannello sulla riga corrente, `a` per il tiling, `g` per aggiornare e `q`
+per tornare ai terminali. L'albero occupa temporaneamente il frame e mostra
+la vera appartenenza, i numeri P/B e lo stato AUTO TILE/MANUAL, SYNC e ZOOM.
+
+Il selettore di destinazione di un pannello elenca tutte le finestre delle
+sessioni aperte. La voce `nome-sessione / [new window]` crea una finestra
+contenente il pannello trasferito, senza avviare un'altra shell. `C-g`
+annulla la scelta. Dal terminale lo spostamento segue l'oggetto nella nuova
+posizione; dall'albero si resta nell'albero.
+
+Spostare conserva buffer, processo, connessione SSH, scrollback e file di
+log. Fra finestre della stessa sessione il numero B resta uguale; cambiando
+sessione viene assegnato il prossimo B libero della destinazione e il nome
+del buffer si aggiorna. Gli ID interni e il percorso del log restano quelli
+originali. La directory della shell non cambia; una finestra trasferita
+conserva anche la directory iniziale usata per i suoi futuri split.
+Le finestre e le sessioni lasciate vuote vengono rimosse.
+
+**Dopo uno spostamento la SYNC viene disattivata nelle finestre coinvolte.**
+Riattivala con `C-b y` dopo aver controllato il nuovo gruppo. Per spostare
+un pannello vengono ricostruiti i layout della finestra di partenza e di
+arrivo, anche se manuali, e si esce dal loro zoom. Spostare una finestra
+intera ne conserva invece layout e zoom. Le altre finestre della sessione
+di destinazione mantengono le proprie impostazioni.
+
+Il tiling automatico è attivo per default: aggiungendo o eliminando un
+pannello, anche quando termina la shell, i pannelli della finestra vengono
+ridistribuiti. Con AUTO TILE, `%` e `"` aggiungono entrambi un pannello al
+layout automatico; con MANUAL mantengono le rispettive direzioni di split.
+`C-b SPC` sceglie il layout (tiled, orizzontale, verticale) usato anche nei
+ricalcoli successivi. `C-b M-5` torna alla disposizione tiled.
+
+Puoi ridimensionare con il mouse o con `C-b C-freccia` / `C-b M-freccia`:
+le dimensioni restano fino alla successiva aggiunta/rimozione. Con `C-b A`
+puoi passare a MANUAL per conservare la disposizione scelta. Per partire
+sempre in modalità manuale, aggiungi nella tua configurazione:
+
+```elisp
+(setq ghostel-mux-auto-tile nil)
+```
+
+Il ricalcolo include tutti i pannelli appartenenti alla finestra: può quindi
+riportare sullo schermo quelli sostituiti temporaneamente da `*scratch*`,
+come `C-b M-5`. Le visualizzazioni estranee vengono sostituite, i loro buffer
+restano vivi. In zoom, la chiusura di un altro pannello non interrompe lo
+zoom: il ricalcolo avviene tornando al layout completo. Una creazione o
+uno spostamento di pannello esce invece dallo zoom.
+Se il frame è troppo piccolo, una creazione/spostamento viene rifiutata
+prima del trasferimento; dopo una chiusura il ricalcolo può restare in
+attesa di spazio, con SYNC disattivata e le altre shell conservate.
+
+### Aggiornare dalla 0.1.9
+
+Aggiorna il clone con `git pull --ff-only`, poi carica il nuovo sorgente:
+
+```text
+M-x load-file RET ~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el RET
+M-x ghostel-mux-refresh RET
+```
+
+Puoi mantenere aperte le shell. I layout già aperti vengono conservati;
+il tiling automatico si applica alla successiva creazione/rimozione, oppure
+subito con `C-b M-5`. Se il clone è altrove, adatta il percorso.
+
 ## Primo utilizzo
 
 1. `M-x ghostel-mux`, nome `produzione-osb`: crea la prima sessione e una shell.
-2. `C-b %`: crea un secondo terminale a destra. `C-b "` divide sotto.
+2. `C-b %` o `C-b "`: aggiunge un terminale e riequilibra il layout.
+   Con AUTO TILE disattivato, `%` divide a destra e `"` sotto.
 3. Esegui il tuo comando SSH o PSMP in ciascun terminale, quindi gli eventuali
    passaggi con sudo. Ogni terminale mantiene la propria connessione.
 4. `C-b y`: attiva SYNC nella finestra corrente. La barra indica il numero
@@ -240,12 +320,16 @@ Anche `C-b g` è un prefisso nativo e mostra i propri sottocomandi.
 | `1`…`9` | Finestra per numero; `0` non esiste con indice iniziale 1 |
 | `,` | Rinomina la finestra; vuoto ripristina il titolo automatico |
 | `&` | Chiude la finestra e i suoi terminali, con conferma |
-| `%` / `"` | Nuovo pannello a destra / sotto |
+| `%` / `"` | Nuovo pannello con tiling automatico; in MANUAL divide a destra / sotto |
 | Frecce | Seleziona il pannello nella direzione indicata |
 | `o` / `O` | Pannello successivo / precedente, con ritorno circolare |
 | `;` | Ultimo pannello usato |
 | `q` | Mostra i numeri; per due secondi puoi premere `1`…`9` |
 | `P` | Selettore completo dei pannelli, anche oltre il nono |
+| `b` | Albero sessioni, finestre e pannelli |
+| `m` | Sposta il pannello in un'altra finestra o sessione |
+| `M` | Sposta la finestra in un'altra sessione |
+| `A` | Attiva/disattiva il tiling automatico della finestra |
 | `z` | Zoom/unzoom con ripristino del layout |
 | `x` | Chiude il pannello e la sua shell, con conferma |
 | Spazio | Alterna layout tiled, orizzontale e verticale |

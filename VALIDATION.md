@@ -1,4 +1,40 @@
-# Verifica della versione 0.1.9
+# Verifica della versione 0.2.0
+
+**72 test ERT superati su Ghostel 0.40.0 e 0.53.0, 0 errori inattesi.**
+Emacs 29.3 su Linux, shell Bash locali con PTY reali. I risultati sono in
+`test-results.txt`; la descrizione dell'ambiente precedente resta sotto.
+
+Le nuove prove verificano:
+
+- Spostamento di pannelli nella stessa sessione e fra sessioni, conservando
+  identità del processo, ID del pannello, file di log e numerazione coerente.
+- Consegna SYNC soltanto al nuovo gruppo visibile dopo riattivazione;
+  disattivazione dei gruppi coinvolti nel trasferimento.
+- Trasferimento dell'ultimo pannello con creazione della nuova finestra senza
+  nuova shell e rimozione dei contenitori lasciati vuoti.
+- Spostamento dell'intera finestra con conservazione di processi e zoom.
+- Destinazioni scadute, anteprime aperte ed errori di layout: trasferimento
+  rifiutato prima di cambiare appartenenza e stato SYNC.
+- Tiling dopo chiusura, chiusura in una sessione nascosta, conservazione dello
+  zoom quando termina un altro pannello e modalità manuale per finestra.
+- Albero, visita del layout completo, chiusura dell'ultima shell nell'albero,
+  digitazione nel prompt di spostamento e annullamento senza effetti.
+
+Prova interattiva in Emacs TTY con Ghostel 0.53.0: tre pannelli `lab`, una
+finestra `sandbox`; apertura dell'albero con `C-b b`, movimento con `n`,
+`m` e annullamento del prompt conservando la riga; trasferimento del pannello
+B2 in `sandbox`, `RET` per aprirne il layout a due pannelli; trasferimento
+della finestra `tools` in `lab`, numeri B4/B5, sessione vuota rimossa.
+Il processo del pannello trasferito è rimasto vivo durante entrambe le mosse.
+
+Prova di reload 0.1.9 → 0.2.0 con terminali già aperti: identità del processo
+conservata, spostamento fra sessioni, apertura/chiusura dell'albero e ripristino
+del layout. Le strutture esistenti non vengono sostituite al caricamento.
+
+Le prove interattive sono su un singolo frame TTY e shell locali: non sono
+una verifica con server SSH/PSMP reali o più frame grafici simultanei.
+
+# Storico: verifica della versione 0.1.9
 
 ## Ambiente
 
