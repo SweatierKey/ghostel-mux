@@ -9,8 +9,8 @@
 - Opzione `ghostel-mux-pane-preview`, fallback senza Consult e gestione del
   pannello terminato durante la scelta. I tre selettori condividono la
   protezione dell'input e il ripristino del contesto originale.
-- Repository Git locale con baseline 0.1.8 e documentazione per bundle,
-  pubblicazione, aggiornamento e ritorno a una versione precedente.
+- Repository GitHub con baseline 0.1.8 e fix 0.1.9 in commit separati;
+  documentazione per installazione da Git, aggiornamento e recupero versioni.
 - 58 test superati su Ghostel 0.40.0 e 0.53.0; prova interattiva con
   Consult/Vertico dopo caricamento sopra la 0.1.8 con tre PTY aperte.
 

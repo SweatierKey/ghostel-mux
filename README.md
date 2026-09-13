@@ -91,7 +91,15 @@ l'anteprima del buffer in `C-b P`. Entrambe le funzioni si applicano anche
 a sessioni già aperte. Il progetto è ora versionato con Git; `GIT.md` spiega
 come usare il bundle, aggiornare e recuperare una versione precedente.
 
-## Installazione
+## Installazione da GitHub
+
+Il repository ufficiale del progetto è
+[SweatierKey/ghostel-mux](https://github.com/SweatierKey/ghostel-mux).
+Per clonarlo in una cartella nuova, collegarlo a Emacs e aggiornare con Git,
+segui [GIT.md](GIT.md). Se stai già usando lo ZIP, puoi mantenere i terminali
+aperti mentre carichi il sorgente dal nuovo clone.
+
+## Installazione dallo ZIP
 
 1. Verifica che `M-x ghostel` apra un terminale funzionante. Se hai una versione
    precedente, aggiornala con il gestore usato per installare Ghostel e riavvia

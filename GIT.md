@@ -1,63 +1,70 @@
-# Git e pubblicazione
+# Installazione e aggiornamenti con Git
 
-Il repository locale contiene `main` e i tag `v0.1.8` e `v0.1.9`.
-La prima versione conserva il pacchetto funzionante prima degli ultimi fix;
-la seconda aggiunge marker SYNC e anteprima dei pannelli. La destinazione
-prevista è `SweatierKey/ghostel-mux` su GitHub. La pubblicazione non è ancora
-avvenuta: al momento della preparazione il collegamento disponibile non
-poteva creare nuovi repository.
+Repository: [SweatierKey/ghostel-mux](https://github.com/SweatierKey/ghostel-mux).
+Il ramo di lavoro è `main`; contiene la versione 0.1.9 e le istruzioni
+aggiornate. La cronologia conserva separatamente la base e gli ultimi fix:
 
-## Conservare la cronologia dal bundle
+| Versione | Commit |
+|---|---|
+| 0.1.8 | [406091d](https://github.com/SweatierKey/ghostel-mux/commit/406091d280f5ace527ad769bbc8fafa8331904ad) |
+| 0.1.9 | [f89ab2e](https://github.com/SweatierKey/ghostel-mux/commit/f89ab2e513d745ed71ce4276f04310ad93e7f410) |
 
-Il file `ghostel-mux-0.1.9.bundle` è un repository Git trasportabile.
-Da una directory che lo contiene, scegli una cartella nuova per il clone:
+## Passare dall'installazione ZIP a Git
 
-```sh
-git clone ghostel-mux-0.1.9.bundle ghostel-mux-git
-cd ghostel-mux-git
-git log --oneline --decorate
-```
-
-Il clone conserva file, commit e tag. Non sovrascrive la tua installazione
-Emacs. Per usare questa cartella, imposta il percorso corrispondente nel
-`load-path` oppure copia il file Lisp nella tua installazione e ricaricalo
-come descritto nel README.
-
-## Caricare da un Git locale autenticato
-
-Crea prima un repository GitHub `ghostel-mux` sul tuo account. Per pubblicare
-l'esatta cronologia del bundle con i comandi qui sotto, il repository remoto
-deve essere vuoto. Se è già inizializzato, integra prima la sua cronologia:
-non usare un push forzato.
+Clona in una cartella nuova, senza sovrascrivere quella usata finora:
 
 ```sh
-git remote set-url origin https://github.com/SweatierKey/ghostel-mux.git
-git push -u origin main
-git push origin v0.1.8 v0.1.9
+git clone https://github.com/SweatierKey/ghostel-mux.git ~/src/ghostel-mux
 ```
 
-Sono necessarie le normali credenziali GitHub configurate sul tuo computer;
-non inserire token o password nei file del progetto.
+Nella configurazione Emacs sostituisci l'aggiunta del vecchio percorso Mux
+al `load-path` con:
 
-## Aggiornare dopo la pubblicazione
+```elisp
+(add-to-list 'load-path (expand-file-name "~/src/ghostel-mux"))
+```
 
-Dal clone collegato al repository remoto:
+I tuoi autoload, il binding `C-c m` e le opzioni Mux possono restare come
+sono. Valuta la nuova forma e carica il file dal clone:
+
+```text
+M-x load-file RET ~/src/ghostel-mux/ghostel-mux.el RET
+M-x ghostel-mux-refresh RET
+```
+
+Non occorre chiudere i terminali. Conserva la vecchia cartella finché hai
+verificato che Emacs carichi il nuovo percorso; `M-x find-library RET
+ghostel-mux RET` mostra il file trovato nel `load-path`.
+
+## Aggiornamenti successivi
+
+Dal clone:
 
 ```sh
-git status --short
-git pull --ff-only
+git -C ~/src/ghostel-mux status --short
+git -C ~/src/ghostel-mux pull --ff-only
 ```
 
-Se hai modifiche locali, conservale prima dell'aggiornamento. Dopo il pull,
-elimina l'eventuale bytecode vecchio e ricarica `ghostel-mux.el` in Emacs.
-`git pull --ff-only` si ferma se le storie sono divergenti.
+Se hai modifiche locali, conservale prima di aggiornare. Dopo il pull,
+elimina l'eventuale vecchio `ghostel-mux.elc` dal clone e ricarica il sorgente
+come sopra. Il pacchetto distribuisce il file Lisp, senza bytecode.
 
-## Recuperare una versione senza alterare il clone corrente
+## Recuperare una versione precedente
+
+Crea una cartella separata per la versione 0.1.8:
 
 ```sh
-git worktree add --detach ../ghostel-mux-0.1.8 v0.1.8
+git -C ~/src/ghostel-mux worktree add --detach ../ghostel-mux-0.1.8 406091d280f5ace527ad769bbc8fafa8331904ad
 ```
 
-Questo crea una cartella separata con la versione precedente. Un downgrade
-va caricato in un nuovo processo Emacs: l'aggiornamento a caldo è verificato
-in avanti, non come procedura generale di rollback.
+Questo conserva il clone corrente. Prova un downgrade in un nuovo processo
+Emacs: il caricamento a caldo è verificato in avanti, non come procedura
+generale di rollback.
+
+## Bundle consegnato prima della pubblicazione
+
+Il precedente `ghostel-mux-0.1.9.bundle` conserva la cronologia locale e i
+tag locali `v0.1.8` e `v0.1.9`. I commit importati su GitHub hanno gli stessi
+file delle due versioni, ma identificativi diversi. Per seguire gli
+aggiornamenti GitHub usa un clone nuovo come sopra; il bundle resta una
+copia autonoma. I tag del bundle non sono stati pubblicati su GitHub.
