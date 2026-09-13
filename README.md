@@ -123,34 +123,52 @@ come usare il bundle, aggiornare e recuperare una versione precedente.
 
 Il repository ufficiale del progetto è
 [SweatierKey/ghostel-mux](https://github.com/SweatierKey/ghostel-mux).
-Per clonarlo in una cartella nuova, collegarlo a Emacs e aggiornare con Git,
-segui [GIT.md](GIT.md). Se stai già usando lo ZIP, puoi mantenere i terminali
-aperti mentre carichi il sorgente dal nuovo clone.
+Per una nuova installazione:
+
+```sh
+mkdir -p ~/.emacs.d/lisp
+git clone https://github.com/SweatierKey/ghostel-mux.git ~/.emacs.d/lisp/ghostel-mux
+```
+
+Poi aggiungi il blocco `use-package` riportato sotto. Se la cartella esiste
+già perché usi lo ZIP, segui la migrazione in [GIT.md](GIT.md), che spiega
+anche aggiornamenti e recupero delle versioni precedenti.
 
 ## Installazione dallo ZIP
 
-1. Verifica che `M-x ghostel` apra un terminale funzionante. Se hai una versione
-   precedente, aggiornala con il gestore usato per installare Ghostel e riavvia
-   Emacs quando aggiorni il modulo nativo.
-2. Estrai questa cartella in `~/.emacs.d/lisp/ghostel-mux/`.
-   Il file deve risultare `~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el`.
-   Se `user-emacs-directory` è diverso, usa la sua sottocartella `lisp/`.
-3. Aggiungi alla configurazione Emacs:
+Estrai questa cartella in `~/.emacs.d/lisp/ghostel-mux/`.
+Il file deve risultare `~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el`.
+Poi usa la stessa configurazione descritta sotto.
+
+## Configurazione Emacs con use-package
+
+Verifica prima che `M-x ghostel` apra un terminale funzionante. Se aggiorni
+il modulo nativo di Ghostel, riavvia Emacs dopo l'aggiornamento.
+
+Aggiungi alla tua configurazione Emacs:
 
 ```elisp
-(add-to-list 'load-path
-             (expand-file-name "lisp/ghostel-mux" user-emacs-directory))
-
-;; Le sessioni partono dalla shell locale di WSL; poi puoi usare SSH/PSMP
-;; esattamente come dentro tmux.
-(setq ghostel-mux-directory (expand-file-name "~"))
-
-(autoload 'ghostel-mux "ghostel-mux" nil t)
-(global-set-key (kbd "C-c m") #'ghostel-mux)
+(use-package ghostel-mux
+  :ensure nil
+  :load-path "~/.emacs.d/lisp/ghostel-mux/"
+  :commands (ghostel-mux)
+  :bind ("C-c m" . ghostel-mux)
+  :init
+  (setq ghostel-mux-directory (expand-file-name "~")
+        ghostel-mux-scrollback-bytes (* 50 1024 1024)
+        ghostel-mux-log-output t))
 ```
 
-4. Valuta queste forme oppure riavvia Emacs. Avvia con `M-x ghostel-mux`
-   o `C-c m` da un normale buffer Emacs.
+Valuta il blocco oppure riavvia Emacs. Avvia con `C-c m` o `M-x ghostel-mux`
+da un normale buffer Emacs. Le sessioni partono dalla shell locale, nella
+home; dentro ogni pannello puoi usare SSH/PSMP.
+
+`:ensure nil` usa la copia locale del pacchetto; `:commands` e `:bind`
+ne preparano il caricamento al primo utilizzo. Il blocco imposta il limite
+di scrollback a 50 MiB per pannello e abilita i log di output.
+Se hai installato Mux in un'altra cartella, adatta `:load-path`.
+Questo blocco sostituisce le precedenti forme dedicate a Mux per
+`load-path`, `autoload` e `global-set-key`.
 
 `example-init.el` contiene la stessa configurazione e le opzioni principali.
 Il pacchetto non installa dipendenze né modifica la tua configurazione da solo.

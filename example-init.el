@@ -1,18 +1,19 @@
 ;;; example-init.el --- Example configuration -*- lexical-binding: t; -*-
 
 ;; Ghostel must already work: try M-x ghostel first. Tested on 0.40 and 0.53.
-(add-to-list 'load-path
-             (expand-file-name "lisp/ghostel-mux" user-emacs-directory))
-
 ;; Start on WSL locally; run your SSH/PSMP command inside each pane.
-(setq ghostel-mux-directory (expand-file-name "~")
-      ghostel-mux-scrollback-bytes (* 50 1024 1024)
-      ghostel-mux-log-output t
-      ghostel-mux-log-directory
-      (expand-file-name "ghostel-mux-logs/" user-emacs-directory))
+(use-package ghostel-mux
+  :ensure nil
+  :load-path "~/.emacs.d/lisp/ghostel-mux/"
+  :commands (ghostel-mux)
+  :bind ("C-c m" . ghostel-mux)
+  :init
+  (setq ghostel-mux-directory (expand-file-name "~")
+        ghostel-mux-scrollback-bytes (* 50 1024 1024)
+        ghostel-mux-log-output t))
 
-(autoload 'ghostel-mux "ghostel-mux" nil t)
-(global-set-key (kbd "C-c m") #'ghostel-mux)
+;; If installed elsewhere, change :load-path above to the actual directory.
+;; Logs default to ghostel-mux-logs/ inside user-emacs-directory.
 
 ;; In managed terminals: C-b prefix, C-b y SYNC, C-b s sessions.
 ;; Outside them: C-b keeps its normal Emacs binding.

@@ -17,15 +17,19 @@ Clona in una cartella nuova, senza sovrascrivere quella usata finora:
 git clone https://github.com/SweatierKey/ghostel-mux.git ~/src/ghostel-mux
 ```
 
-Nella configurazione Emacs sostituisci l'aggiunta del vecchio percorso Mux
-al `load-path` con:
+Usa il blocco `use-package` della
+[configurazione Emacs nel README](README.md#configurazione-emacs-con-use-package).
+Poiché questo clone si trova in una cartella diversa da quella predefinita,
+nel blocco sostituisci soltanto il valore di `:load-path` con:
 
 ```elisp
-(add-to-list 'load-path (expand-file-name "~/src/ghostel-mux"))
+:load-path "~/src/ghostel-mux/"
 ```
 
-I tuoi autoload, il binding `C-c m` e le opzioni Mux possono restare come
-sono. Valuta la nuova forma e carica il file dal clone:
+Il blocco comprende già il binding `C-c m`, il caricamento al primo utilizzo
+e le opzioni iniziali. Sostituisci le vecchie forme di configurazione Mux
+con questo blocco. Per usare il clone nelle sessioni già aperte, valuta il
+blocco aggiornato e carica il sorgente:
 
 ```text
 M-x load-file RET ~/src/ghostel-mux/ghostel-mux.el RET
