@@ -1,4 +1,4 @@
-# Ghostel Mux 0.1.8
+# Ghostel Mux 0.1.9
 
 Un multiplexer per Emacs costruito sopra Ghostel, con sessioni, finestre e
 pannelli. Riprende il flusso di lavoro e la configurazione tmux fornita:
@@ -41,7 +41,7 @@ Questo non richiede di riavviare Emacs o chiudere i tuoi altri terminali.
 `M-x ghostel-mux-doctor` mostra anche il percorso della definizione Ghostel
 effettivamente caricata, utile se esistono più copie nel `load-path`.
 
-### Aggiornamento dalla 0.1.1–0.1.7
+### Aggiornamento dalla 0.1.1–0.1.8
 
 Sostituisci i file del pacchetto ed elimina l'eventuale vecchio
 `ghostel-mux.elc`. Puoi mantenere aperte le sessioni e caricare il sorgente:
@@ -85,6 +85,11 @@ il ricaricamento con sessioni aperte; Consult resta opzionale.
 La 0.1.8 limita `C-b w` alle finestre della **sessione attiva**, mantenendo
 l'anteprima Consult. Il prompt ne esplicita il nome: `Window (produzione):`.
 Per cambiare sessione usa `C-b s`.
+
+La 0.1.9 aggiunge l'indicatore compatto `[S]` per i destinatari SYNC e
+l'anteprima del buffer in `C-b P`. Entrambe le funzioni si applicano anche
+a sessioni già aperte. Il progetto è ora versionato con Git; `GIT.md` spiega
+come usare il bundle, aggiornare e recuperare una versione precedente.
 
 ## Installazione
 
@@ -281,6 +286,19 @@ finestra Mux del terminale selezionato. Passato un estremo ripartono dall'altro;
 funzionano anche nello zoom. `C-b ;` conserva invece il significato di
 "ultimo pannello usato".
 
+`C-b P` elenca i pannelli della finestra Mux attiva e mostra il buffer del
+candidato nel riquadro da cui hai aperto il selettore. Gli altri riquadri
+restano visibili. Puoi vedere anche un terminale nascosto o un altro pannello
+mentre sei in zoom, senza attivarlo fino a Invio. C-g ripristina la vista,
+il pannello selezionato e l'ambito SYNC originali. Come negli altri selettori,
+la digitazione verso i terminali è bloccata durante l'anteprima, mentre
+l'output dei processi continua. Se il pannello termina, Mux ne segnala
+l'indisponibilità. Per disattivare solo questa anteprima:
+
+```elisp
+(setq ghostel-mux-pane-preview nil)
+```
+
 ## Mouse e copia
 
 La selezione col mouse usa il comportamento Ghostel e passa in copy mode.
@@ -404,6 +422,7 @@ Ogni pannello mostra un ruolo esplicito:
 
 | Indicazione | Significato |
 |---|---|
+| `[S]` | Destinatario dell’input sincronizzato dal terminale selezionato |
 | `P2 SELECTED` | Pannello selezionato per l'input |
 | `P1 SYNC TARGET` | Altro pannello visibile incluso nel broadcast |
 | `P1 SELECTED · LOCAL` | Terminale selezionato appartenente a un altro gruppo; input locale |
@@ -412,6 +431,16 @@ Ogni pannello mostra un ruolo esplicito:
 | `SYNC OFF (LOCAL)` | SYNC disattivato, input locale |
 | `SYNC:3 [P1,P2,P3]` | Numero e identità dei destinatari visibili |
 | `SYNC PAUSED (LOCAL) · ZOOM` | Zoom attivo, input locale; SYNC riprende con lo zoom out |
+
+L'indicatore `[S]` compare all'inizio dell'intestazione, prima del nome,
+su tutti i destinatari del broadcast, incluso il terminale selezionato.
+Tiene conto dei pannelli vivi e visibili e della sessione attiva: sparisce
+in zoom, durante le anteprime e quando selezioni un buffer estraneo al
+gruppo o un buffer di testo. L'opzione SYNC può restare memorizzata anche
+quando non ci sono indicatori. In copy mode i normali comandi di copia
+restano locali, ma un incolla esplicito nel terminale può ancora essere
+sincronizzato: `[S]` continua quindi a indicarne i destinatari. Il colore
+del nome identifica soltanto la sessione e non cambia con SYNC.
 
 La barra inferiore mette ruolo e SYNC prima dei titoli lunghi. L'intestazione
 mostra prima sessione, numero della finestra e numero stabile del buffer,

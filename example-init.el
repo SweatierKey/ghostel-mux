@@ -28,4 +28,7 @@
 ;; To disable only window previews:
 ;; (setq ghostel-mux-window-preview nil)
 
+;; C-b P: pane buffer preview with Consult.
+;; (setq ghostel-mux-pane-preview nil) ; disable pane previews only
+
 ;;; example-init.el ends here

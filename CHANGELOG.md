@@ -1,3 +1,19 @@
+# 0.1.9
+
+- Indicatore `[S]` prima del nome per i destinatari effettivi del broadcast
+  dal terminale selezionato, indipendente dal colore della sessione.
+- Gestione della vera finestra selezionata durante il ridisegno: niente
+  indicatori su gruppi estranei, durante anteprime o con input locale in zoom.
+- `C-b P` mostra l'anteprima del buffer del pannello, anche nascosto o in zoom,
+  mantenendo visibili gli altri riquadri. Invio conferma, C-g ripristina.
+- Opzione `ghostel-mux-pane-preview`, fallback senza Consult e gestione del
+  pannello terminato durante la scelta. I tre selettori condividono la
+  protezione dell'input e il ripristino del contesto originale.
+- Repository Git locale con baseline 0.1.8 e documentazione per bundle,
+  pubblicazione, aggiornamento e ritorno a una versione precedente.
+- 58 test superati su Ghostel 0.40.0 e 0.53.0; prova interattiva con
+  Consult/Vertico dopo caricamento sopra la 0.1.8 con tre PTY aperte.
+
 # 0.1.8
 
 - `C-b w` elenca esclusivamente le finestre della sessione attiva, anche in

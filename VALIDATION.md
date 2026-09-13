@@ -1,4 +1,4 @@
-# Verifica della versione 0.1.8
+# Verifica della versione 0.1.9
 
 ## Ambiente
 
@@ -13,7 +13,23 @@
 
 ## Risultato
 
-**53 test ERT superati su ciascuna delle due versioni, 0 errori inattesi.**
+**58 test ERT superati su ciascuna delle due versioni, 0 errori inattesi.**
+
+Nella 0.1.9 sono verificati i destinatari del marker `[S]` rispetto alla
+consegna dell'input: più pannelli, zoom, buffer nascosti, sorgente estranea,
+e incolla esplicito dalla copy mode. Il test del rendering distingue la
+finestra temporaneamente selezionata da Emacs da quella effettiva e controlla
+che il colore della sessione resti applicato soltanto al nome.
+
+Per C-b P: selezione tramite keyboard macro con Consult, pannello scelto
+nello zoom, fallback standard, anteprima di un buffer nascosto, blocco degli
+invii, annullamento e candidato terminato durante l'anteprima.
+
+Verifica interattiva su Ghostel 0.40.0, Consult 2.0 e Vertico 2.0 dopo reload
+0.1.8 -> 0.1.9: tre PTY conservate; marker su P1/P3 con P2 nascosto;
+anteprima di P2 lasciando visibili i riquadri fratelli; digitazione aggiuntiva
+nel minibuffer; C-g ripristina P1/P3; Invio seleziona P2 e aggiorna i marker
+a P1/P2; zoom su P2 rimuove i marker. `test-results.txt` include questi stati.
 
 Nella 0.1.8, i test del selettore verificano che i candidati appartengano
 solo alla sessione attiva. La prova include un terminale di un'altra sessione
@@ -42,7 +58,7 @@ La migrazione dei numeri dalla 0.1.4 alla 0.1.5 era stata verificata con sei
 PTY e due ricaricamenti; i test di migrazione sono mantenuti nella suite.
 
 Le seguenti prove interattive risalgono alla 0.1.4; i corrispondenti test ERT
-sono stati rieseguiti nella 0.1.8:
+sono stati rieseguiti nella 0.1.9:
 
 Con Consult e Vertico in Emacs interattivo: apertura con C-b s, navigazione
 tra sessioni con layout diversi, anteprima senza cambiare la sessione

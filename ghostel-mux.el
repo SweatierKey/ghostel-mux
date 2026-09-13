@@ -1,6 +1,6 @@
 ;;; ghostel-mux.el --- Tmux-style workspaces for Ghostel -*- lexical-binding: t; -*-
 
-;; Version: 0.1.8
+;; Version: 0.1.9
 ;; Package-Requires: ((emacs "29.1") (ghostel "0.40.0"))
 ;; Keywords: terminals, convenience
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -60,6 +60,10 @@ Uses `consult-preview-key'.  Without Consult, use normal completion."
   "Preview Mux window layouts with Consult in `ghostel-mux-select-window'.
 Uses `consult-preview-key'.  Without Consult, use normal completion."
   :type 'boolean)
+(defcustom ghostel-mux-pane-preview t
+  "Preview terminal buffers with Consult in `ghostel-mux-select-pane'.
+Uses `consult-preview-key'; nil keeps the ordinary completion selector."
+  :type 'boolean)
 (defcustom ghostel-mux-session-colors t
   "Color only the owning session name in each pane's header.
 Session colors identify ownership, independently of selection, SYNC and COPY.
@@ -67,6 +71,7 @@ Set to nil to use the surrounding theme's text color everywhere."
   :type 'boolean)
 (defvar ghostel-mux-session-history nil)
 (defvar ghostel-mux-window-history nil)
+(defvar ghostel-mux-pane-history nil)
 
 (defface ghostel-mux-normal '((t (:inherit mode-line)))
   "Normal status." :group 'ghostel-mux)
@@ -82,6 +87,9 @@ Set to nil to use the surrounding theme's text color everywhere."
   "Legacy face; Mux no longer remaps terminal colors." :group 'ghostel-mux)
 (defface ghostel-mux-copy '((t (:weight bold :underline t)))
   "Copy mode indicator, using the surrounding theme colors." :group 'ghostel-mux)
+(defface ghostel-mux-broadcast-marker '((t (:weight bold :underline t)))
+  "Compact broadcast marker, independent of the session accent."
+  :group 'ghostel-mux)
 
 (defface ghostel-mux-session-blue
   '((((class color) (min-colors 89) (background dark)) (:foreground "#91b7d0"))
@@ -173,6 +181,7 @@ An empty palette disables accents.  Built-in accents require 89 colors."
 (defvar ghostel-mux--dispatching nil)
 (defvar ghostel-mux--suppress-input nil)
 (defvar ghostel-mux--rendering-selected 'outside)
+(defvar ghostel-mux--rendering-source-window nil)
 (defvar-local ghostel-mux--pane nil)
 (defvar-local ghostel-mux--copy-active nil)
 (defvar-local ghostel-mux--terminal-active nil)
@@ -430,11 +439,24 @@ RESOLVE-WINDOW maps a candidate to its window; nil uses session names."
                 (set-window-buffer (selected-window) (ghostel-mux--pane-buffer p)))))))
       (force-mode-line-update t))))
 
+(defun ghostel-mux--pane-preview-state (frame original resolve-pane)
+  "Preview the buffer returned by RESOLVE-PANE, preserving ORIGINAL in FRAME."
+  (lambda (action name)
+    (when (and (frame-live-p frame) (memq action '(preview exit)))
+      (let ((ghostel-mux--restoring t))
+        (ghostel-mux--preview-restore original)
+        (when-let* ((p (and (eq action 'preview) name (funcall resolve-pane name)))
+                    (live (ghostel-mux--pane-live-p p)))
+          ;; Replace only the original input pane; leave sibling views intact.
+          (set-window-buffer (frame-selected-window frame) (ghostel-mux--pane-buffer p))))
+      (force-mode-line-update t))))
+
 (defun ghostel-mux--read-with-preview (names prompt require-match category history
-                                             &optional resolve-window annotate)
+                                             &optional resolve-window annotate resolve-pane)
   "Read NAMES with guarded layout preview and unconditional restoration.
 PROMPT, REQUIRE-MATCH, CATEGORY and HISTORY are Consult options.
-RESOLVE-WINDOW and ANNOTATE map candidates to windows and descriptions."
+RESOLVE-WINDOW and ANNOTATE map candidates to windows and descriptions.
+When RESOLVE-PANE is non-nil, preview its buffer instead of a full layout."
   (ghostel-mux--capture)
   (let* ((frame (selected-frame))
          (session (ghostel-mux--current-session))
@@ -453,7 +475,9 @@ RESOLVE-WINDOW and ANNOTATE map candidates to windows and descriptions."
                                :history history
                                :annotate annotate
                                :preview-key consult-preview-key
-                               :state (ghostel-mux--session-preview-state frame original resolve-window))))
+                               :state (if resolve-pane
+                                          (ghostel-mux--pane-preview-state frame original resolve-pane)
+                                        (ghostel-mux--session-preview-state frame original resolve-window)))))
       (when (frame-live-p frame)
         (set-frame-parameter frame 'ghostel-mux-preview nil)
         (let ((ghostel-mux--restoring t)) (set-window-configuration original))
@@ -715,15 +739,27 @@ Mux attaches its own layout.  Do not alias private Ghostel constructors."
     (unless (memq p (ghostel-mux--window-panes w)) (user-error "No previous pane"))
     (ghostel-mux--select-pane p)))
 (defun ghostel-mux-select-pane ()
+  "Select a pane in the active Mux window, with optional Consult buffer preview."
   (interactive)
   (let* ((w (ghostel-mux--require-window))
          (choices (mapcar (lambda (p)
                             (cons (format "%d  %s%s" (ghostel-mux--pane-number p)
                                           (ghostel-mux--pane-title p)
                                           (if (ghostel-mux--pane-live-p p) "" " [EXIT]")) p))
-                          (ghostel-mux--window-panes w))))
-    (ghostel-mux--select-pane
-     (cdr (assoc (completing-read "Pane: " choices nil t) choices)))))
+                          (ghostel-mux--window-panes w)))
+         (prompt (format "Pane (%s): " (ghostel-mux--group-name w)))
+         (name (if (and ghostel-mux-pane-preview (require 'consult nil t))
+                   (ghostel-mux--read-with-preview
+                    (mapcar #'car choices) prompt t 'ghostel-mux-pane
+                    'ghostel-mux-pane-history nil nil
+                    (lambda (candidate) (cdr (assoc candidate choices))))
+                 (completing-read prompt choices nil t nil 'ghostel-mux-pane-history)))
+         (p (cdr (assoc name choices))))
+    (unless (and p (memq (ghostel-mux--window-session w) ghostel-mux--sessions)
+                 (memq w (ghostel-mux--session-windows (ghostel-mux--window-session w)))
+                 (memq p (ghostel-mux--window-panes w)) (ghostel-mux--pane-live-p p))
+      (user-error "Pane exited during selection: %s" name))
+    (ghostel-mux--select-pane p)))
 (defun ghostel-mux--move (direction)
   (let ((win (windmove-find-other-window direction)))
     (when (and (window-live-p win)
@@ -1033,7 +1069,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
 (defun ghostel-mux--dispatch (orig &rest args)
   "Send once per visible live pane, using each pane's encoder."
   (when (and ghostel-mux--input-source (frame-parameter nil 'ghostel-mux-preview))
-    (user-error "Finish session selection before sending terminal input"))
+    (user-error "Finish Mux selection before sending terminal input"))
   (if (or ghostel-mux--dispatching ghostel-mux--suppress-input
           (not (eq (current-buffer) ghostel-mux--input-source))
           (null ghostel-mux--pane)
@@ -1116,7 +1152,9 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
 (defun ghostel-mux--render (part)
   "Render PART with the true selected-window flag supplied by Emacs redisplay."
   (when ghostel-mux--pane
-    (let ((ghostel-mux--rendering-selected (mode-line-window-selected-p)))
+    (let ((ghostel-mux--rendering-selected (mode-line-window-selected-p))
+          ;; Redisplay temporarily selects each window whose bars it draws.
+          (ghostel-mux--rendering-source-window (old-selected-window)))
       (list (funcall (if (eq part 'header) #'ghostel-mux--header #'ghostel-mux--status)
                      ghostel-mux--pane)))))
 
@@ -1125,6 +1163,19 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
   (setq-local mode-line-format '((:eval (ghostel-mux--render 'status)))
               header-line-format '((:eval (ghostel-mux--render 'header)))))
 
+(defun ghostel-mux--sync-target-p (p)
+  "Whether P receives broadcast from the terminal selected for input now."
+  (unless (frame-parameter nil 'ghostel-mux-preview)
+    (let* ((win (or ghostel-mux--rendering-source-window (selected-window)))
+           (buf (and (window-live-p win) (window-buffer win)))
+           (source (and buf (buffer-local-value 'ghostel-mux--pane buf)))
+           (w (ghostel-mux--current-window)))
+      (when (and source w (eq w (ghostel-mux--pane-window source))
+                 (ghostel-mux--pane-live-p source)
+                 (ghostel-mux--window-sync w))
+        (let ((targets (ghostel-mux--visible-panes w)))
+          (and (> (length targets) 1) (memq source targets) (memq p targets)))))))
+
 (defun ghostel-mux--pane-role (p)
   "Describe P's input role, independently of its terminal title."
   (cond ((frame-parameter nil 'ghostel-mux-preview) "PREVIEW")
@@ -1132,14 +1183,13 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
          (if (eq (ghostel-mux--pane-window p) (ghostel-mux--current-window))
              "SELECTED" "SELECTED · LOCAL"))
         ((not (eq (ghostel-mux--pane-window p) (ghostel-mux--current-window))) "OTHER GROUP")
-        ((and (ghostel-mux--window-sync (ghostel-mux--pane-window p))
-              (memq p (ghostel-mux--visible-panes (ghostel-mux--pane-window p))))
+        ((ghostel-mux--sync-target-p p)
          "SYNC TARGET")
         (t "INACTIVE")))
 
 (defun ghostel-mux--scope-help (p)
   "Explain the distinction between P's owner and the attached group."
-  (format "Owner: %s, buffer B%d. Active group: %s.\nC-b y toggles SYNC in the active group, visible live panes only.\nC-b M-5 restores that group's panes. C-b a activates this terminal's group."
+  (format "Owner: %s, buffer B%d. Active group: %s.\n[S] marks broadcast recipients of input from the selected terminal.\nC-b y toggles SYNC in the active group, visible live panes only.\nC-b M-5 restores that group's panes. C-b a activates this terminal's group."
           (ghostel-mux--group-name (ghostel-mux--pane-window p))
           (ghostel-mux--buffer-number p)
           (ghostel-mux--group-name (ghostel-mux--current-window))))
@@ -1180,10 +1230,13 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
   (let* ((w (ghostel-mux--pane-window p))
          (s (ghostel-mux--window-session w))
          (active (ghostel-mux--pane-selected-p p))
+         (broadcast (ghostel-mux--sync-target-p p))
+         (marker (if broadcast "[S] " ""))
+         (name-start (+ 3 (length marker)))
          (copy (with-current-buffer (ghostel-mux--pane-buffer p)
                  (memq ghostel--input-mode '(copy emacs))))
          (text
-          (propertize (format " %s %s/B%d | P%d %s | %s%s " (if active "●" "○")
+          (propertize (format " %s%s %s/B%d | P%d %s | %s%s " marker (if active "●" "○")
                         (ghostel-mux--group-name w)
                         (ghostel-mux--buffer-number p)
                         (ghostel-mux--pane-number p)
@@ -1198,8 +1251,10 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
     ;; Numbers, title, COPY and input roles retain their existing faces.
     (when ghostel-mux-session-colors
       (when-let ((face (ghostel-mux--session-color s)))
-        (add-face-text-property 3 (+ 3 (length (ghostel-mux--session-name s)))
+        (add-face-text-property name-start (+ name-start (length (ghostel-mux--session-name s)))
                                 face nil text)))
+    (when broadcast
+      (add-face-text-property 1 4 'ghostel-mux-broadcast-marker nil text))
     (concat (if copy
                 (propertize " [COPY MODE] q:exit · M-w:copy · C-w:copy/exit |"
                             'face 'ghostel-mux-copy)
@@ -1401,7 +1456,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
   "Report adapter availability and the current pane's recording backend."
   (interactive)
   (with-help-window "*Ghostel Mux Doctor*"
-    (princ (format "Emacs: %s\nGhostel library: %s\nMux: 0.1.8\n\n"
+    (princ (format "Emacs: %s\nGhostel library: %s\nMux: 0.1.9\n\n"
                    emacs-version (locate-library "ghostel")))
     (princ (format "Loaded ghostel definition: %s\nCreation API: %s\n\n"
                    (symbol-file 'ghostel 'defun)
