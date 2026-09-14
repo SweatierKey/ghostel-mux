@@ -1,151 +1,37 @@
-# Ghostel Mux 0.2.0
+# Ghostel Mux 0.3.0
 
-Un multiplexer per Emacs costruito sopra Ghostel, con sessioni, finestre e
-pannelli. Riprende il flusso di lavoro e la configurazione tmux fornita:
-prefisso `C-b`, SYNC su `y`, selezione persistente, colori di stato e log
-distinti per terminale.
+Un multiplexer per Emacs costruito sopra Ghostel: **sessioni → finestre →
+pannelli**, con tasti ispirati a tmux. Ogni pannello è un vero terminale
+Ghostel con la propria shell, PTY, connessione SSH, scrollback e log.
 
-Ogni pannello è un vero buffer Ghostel. Sessioni e finestre conservano i layout
-Emacs e i buffer; cambiare sessione o fare zoom non ricrea le shell.
+Cambiare sessione, fare zoom o trasferire un pannello conserva i processi.
+SYNC invia soltanto ai terminali **vivi e visibili della finestra Mux attiva**.
+Durante lo zoom l'input resta nel solo pannello visibile.
 
-## Demo
+## Schermate
 
-![Ghostel Mux: split, SYNC, zoom locale e anteprime Consult](docs/media/demo.gif)
+**Otto pannelli, una sola barra compatta per terminale.**
 
-[Guarda o scarica il video MP4](docs/media/demo.mp4) ·
-[Schermate e dettagli della demo](docs/media/README.md)
+![Otto terminali: appartenenza e destinatari SYNC nelle barre](docs/media/eight-panes.png)
 
-Demo reale in Emacs terminale, con shell locali e tema Wombat.
-La sequenza mostra split, SYNC sui pannelli visibili, sospensione durante
-lo zoom, anteprime di finestre e sessioni e copy mode.
+**Albero con anteprima laterale di sola lettura.**
 
-<details>
-<summary>Schermate: SYNC, zoom e anteprima delle sessioni</summary>
+![Albero sessioni, finestre e pannelli con anteprima del terminale selezionato](docs/media/tree.png)
 
-**SYNC: i marker `[S]` indicano i destinatari.**
+Schermate reali della 0.3.0, Emacs grafico su Linux e tema Wombat.
+Sono disponibili anche la [GIF](docs/media/demo.gif) e il
+[video MP4](docs/media/demo.mp4) della **0.1.9**: mostrano il flusso SYNC,
+zoom e Consult, ma la loro grafica precede le nuove barre e l'albero.
 
-![Tre shell visibili ricevono lo stesso comando](docs/media/sync.png)
+## Installazione con use-package
 
-**Zoom: l'input resta nel solo pannello visibile.**
+Servono **Emacs 29.1+**, Git e **Ghostel 0.40.0+** con il modulo nativo
+funzionante. Prova prima `M-x ghostel`; `compat` è una sua dipendenza.
+Questa versione è verificata su Ghostel 0.40.0 e 0.53.0.
 
-![Pannello ingrandito con SYNC PAUSED LOCAL nella barra](docs/media/zoom.png)
-
-**Consult: anteprima del layout prima di cambiare sessione.**
-
-![Selettore di sessioni con anteprima e input terminale bloccato](docs/media/session-preview.png)
-
-</details>
-
-## Requisiti e installazione
-
-- Emacs **29.1 o successivo** con supporto ai moduli dinamici.
-- Ghostel **0.40.0 o successivo**, con il suo modulo nativo compatibile già
-  funzionante. Verificato su 0.40.0 e 0.53.0; altre build richiedono una
-  verifica dell'adattatore.
-- `compat`, installato come dipendenza di Ghostel.
-- Per i log completi: backend PTY Emacs. Viene selezionato automaticamente
-  per i pannelli registrati; Ghostel continua a usare libghostty per emulazione
-  e rendering.
-
-Non occorre modificare o ricompilare Ghostel. Non servono Perspective,
-persp-mode, tmux, un nuovo daemon o software da installare sui server remoti.
-
-### Aggiornamento dalla 0.1.0: errore `ghostel-create` mancante
-
-La versione 0.1.1 usa `ghostel-create` quando disponibile e il comando
-pubblico `ghostel` con prefisso di creazione forzata sulle versioni precedenti.
-La differenza viene gestita all'interno di Mux, senza definire alias in Ghostel.
-È gestito anche il precedente nome della variabile del titolo del terminale.
-
-Sostituisci `ghostel-mux.el` con quello nuovo. Se l'avvio precedente si era
-fermato al controllo di compatibilità, ricarica il file direttamente:
-
-```text
-M-x load-file RET ~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el RET
-M-x ghostel-mux RET
-```
-
-Questo non richiede di riavviare Emacs o chiudere i tuoi altri terminali.
-`M-x ghostel-mux-doctor` mostra anche il percorso della definizione Ghostel
-effettivamente caricata, utile se esistono più copie nel `load-path`.
-
-### Aggiornamento dalla 0.1.1–0.1.8
-
-Sostituisci i file del pacchetto ed elimina l'eventuale vecchio
-`ghostel-mux.elc`. Puoi mantenere aperte le sessioni e caricare il sorgente:
-
-```text
-M-x load-file RET ~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el RET
-M-x ghostel-mux-refresh RET
-```
-
-La 0.1.2 corregge i prompt aperti tramite `C-b`, compreso `C-b :`:
-la mappa del prefisso viene disattivata prima di eseguire il comando scelto.
-Per esempio, `C-b :`, `new-session`, Invio, nome della sessione, Invio.
-È un selettore dei comandi Mux con completamento Emacs; non interpreta
-la sintassi completa di tmux con opzioni come `new-session -s nome`.
-
-Il ricaricamento elimina i vecchi colori predefiniti di Mux e le sue
-rimappature dei pannelli, conservando il tema e le personalizzazioni utente.
-Applica anche ai pannelli già aperti la chiusura alla fine della shell e
-il nuovo ambito SYNC: esclusivamente i destinatari visibili, zoom locale.
-
-La 0.1.3 rende `C-b` un prefisso Emacs nativo e aggiunge `C-b g` per
-accedere al prefisso originale `C-c` di Ghostel. Non serve riavviare Emacs.
-
-La 0.1.4 aggiunge l'anteprima delle sessioni con Consult e barre con ruolo
-del pannello, stato SYNC e destinatari espliciti. Il caricamento aggiorna
-anche le barre dei pannelli già aperti.
-
-La 0.1.5 assegna numeri ai buffer separatamente per sessione, anche a quelli
-già aperti: `*mux:produzione:1*`, `*mux:produzione:2*`, `*mux:test:1*`.
-La migrazione conserva processi, identità interne e log. Le barre distinguono
-appartenenza e gruppo attivo; `C-b a` attiva il gruppo del terminale selezionato.
-
-La 0.1.6 completa gli accenti per sessione, attivi per impostazione predefinita:
-colora solo il nome nell'intestazione. Il ricaricamento li applica anche alle
-sessioni già aperte. Non occorre aggiungere impostazioni alla configurazione.
-
-La 0.1.7 aggiunge `C-b O` (O maiuscola), inverso di `C-b o`, e l'anteprima
-Consult delle finestre con `C-b w`. I nuovi comandi funzionano anche dopo
-il ricaricamento con sessioni aperte; Consult resta opzionale.
-
-La 0.1.8 limita `C-b w` alle finestre della **sessione attiva**, mantenendo
-l'anteprima Consult. Il prompt ne esplicita il nome: `Window (produzione):`.
-Per cambiare sessione usa `C-b s`.
-
-La 0.1.9 aggiunge l'indicatore compatto `[S]` per i destinatari SYNC e
-l'anteprima del buffer in `C-b P`. Entrambe le funzioni si applicano anche
-a sessioni già aperte. Il progetto è ora versionato con Git; `GIT.md` spiega
-come usare il bundle, aggiornare e recuperare una versione precedente.
-
-## Installazione da GitHub
-
-Il repository ufficiale del progetto è
-[SweatierKey/ghostel-mux](https://github.com/SweatierKey/ghostel-mux).
-Per una nuova installazione:
-
-```sh
-mkdir -p ~/.emacs.d/lisp
-git clone https://github.com/SweatierKey/ghostel-mux.git ~/.emacs.d/lisp/ghostel-mux
-```
-
-Poi aggiungi il blocco `use-package` riportato sotto. Se la cartella esiste
-già perché usi lo ZIP, segui la migrazione in [GIT.md](GIT.md), che spiega
-anche aggiornamenti e recupero delle versioni precedenti.
-
-## Installazione dallo ZIP
-
-Estrai questa cartella in `~/.emacs.d/lisp/ghostel-mux/`.
-Il file deve risultare `~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el`.
-Poi usa la stessa configurazione descritta sotto.
-
-## Configurazione Emacs con use-package
-
-Verifica prima che `M-x ghostel` apra un terminale funzionante. Se aggiorni
-il modulo nativo di Ghostel, riavvia Emacs dopo l'aggiornamento.
-
-Aggiungi alla tua configurazione Emacs:
+Aggiungi il seguente blocco all'init. **Installa automaticamente** il clone in
+`~/.emacs.d/lisp/ghostel-mux/` al primo avvio, poi prepara `C-c m`.
+Non serve un clone manuale preliminare.
 
 ```elisp
 (use-package ghostel-mux
@@ -154,64 +40,186 @@ Aggiungi alla tua configurazione Emacs:
   :commands (ghostel-mux)
   :bind ("C-c m" . ghostel-mux)
   :init
+  ;; Clone once, directly into the requested directory.
+  ;; An existing installation is kept; updates are explicit git pull operations.
+  (let* ((dir (expand-file-name "~/.emacs.d/lisp/ghostel-mux/"))
+         (source (expand-file-name "ghostel-mux.el" dir)))
+    (unless (file-exists-p source)
+      (when (file-exists-p (directory-file-name dir))
+        (error "Ghostel Mux: %s exists but ghostel-mux.el is missing" dir))
+      (unless (executable-find "git")
+        (error "Ghostel Mux: install Git and restart Emacs"))
+      (make-directory (file-name-directory (directory-file-name dir)) t)
+      (let ((stage (make-temp-file
+                    (expand-file-name ".ghostel-mux-install-"
+                                      (file-name-directory (directory-file-name dir))) t)))
+        (unwind-protect
+            (progn
+              (unless (zerop (process-file
+                             "git" nil "*Ghostel Mux install*" nil "clone" "--"
+                             "https://github.com/SweatierKey/ghostel-mux.git" stage))
+                (error "Ghostel Mux: clone failed; see *Ghostel Mux install*"))
+              (unless (file-exists-p (expand-file-name "ghostel-mux.el" stage))
+                (error "Ghostel Mux: incomplete checkout"))
+              (rename-file stage (directory-file-name dir)))
+          (when (file-directory-p stage) (delete-directory stage t))))))
   (setq ghostel-mux-directory (expand-file-name "~")
         ghostel-mux-scrollback-bytes (* 50 1024 1024)
         ghostel-mux-log-output t))
 ```
 
-Valuta il blocco oppure riavvia Emacs. Avvia con `C-c m` o `M-x ghostel-mux`
-da un normale buffer Emacs. Le sessioni partono dalla shell locale, nella
-home; dentro ogni pannello puoi usare SSH/PSMP.
+È lo stesso blocco di [example-init.el](example-init.el).
+`:ensure nil` evita di cercare Mux negli archivi ELPA: il clone viene
+installato dalla sezione `:init`, mentre `:load-path`, `:commands` e
+`:bind` preparano il caricamento al primo utilizzo.
+L'installazione usa una cartella temporanea e la rinomina soltanto quando
+il clone è completo; in caso di errore puoi riprovare senza un checkout
+parziale nella destinazione. Non sovrascrive una directory già esistente.
 
-`:ensure nil` usa la copia locale del pacchetto; `:commands` e `:bind`
-ne preparano il caricamento al primo utilizzo. Il blocco imposta il limite
-di scrollback a 50 MiB per pannello e abilita i log di output.
-Se hai installato Mux in un'altra cartella, adatta `:load-path`.
-Questo blocco sostituisce le precedenti forme dedicate a Mux per
-`load-path`, `autoload` e `global-set-key`.
+Se hai già installato Mux, il blocco **non riclona e non aggiorna** il pacchetto.
+Per una cartella diversa, modifica sia `:load-path` sia `dir`.
+Ghostel e il modulo nativo restano gestiti dalla tua installazione Ghostel.
 
-`example-init.el` contiene la stessa configurazione e le opzioni principali.
-Il pacchetto non installa dipendenze né modifica la tua configurazione da solo.
+### Aggiornamento
 
-## Albero, spostamenti e tiling automatico (0.2.0)
+```sh
+git -C ~/.emacs.d/lisp/ghostel-mux pull --ff-only
+```
 
-La gerarchia è **sessione → finestra Mux → pannello**. Ogni pannello ha un
-solo proprietario: mostrarne il buffer altrove con `switch-to-buffer` non
-cambia l'appartenenza; i nuovi comandi di spostamento la cambiano davvero.
+Poi riavvia Emacs oppure carica il sorgente, conservando le shell aperte:
 
-| Tasti | Azione |
+```text
+M-x load-file RET ~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el RET
+```
+
+Se l'albero era aperto durante l'aggiornamento, chiudilo con `q` e riaprilo
+con `C-b b`. La 0.3.0 aggiorna nomi e barre anche nei pannelli già esistenti;
+gli ID interni e i log restano invariati.
+Se aggiorni **il modulo nativo di Ghostel**, riavvia invece Emacs.
+
+Per il clone manuale o lo ZIP: la directory deve contenere direttamente
+`ghostel-mux.el`; puoi usare lo stesso blocco, che rileva la copia presente.
+Le istruzioni Git sono anche in [GIT.md](GIT.md).
+
+## Primo utilizzo
+
+1. `C-c m` crea subito la prima sessione, `session-1`, senza chiedere un nome.
+2. `C-b %` o `C-b "` aggiunge un terminale e ridistribuisce il layout.
+3. Esegui SSH/PSMP separatamente in ciascun pannello.
+4. `C-b y` attiva SYNC sui destinatari visibili. La barra mostra `[S:N]`.
+5. `C-b z` ingrandisce il pannello; ripetilo per recuperare il layout.
+6. `C-b S` crea immediatamente un'altra sessione: `session-2`, `session-3`…
+   I nomi occupati vengono saltati. `C-b $` rinomina la sessione in seguito.
+7. `C-b s` seleziona una sessione con anteprima Consult; `C-b b` apre l'albero.
+8. `C-b d` torna al layout Emacs precedente, lasciando vive le shell.
+
+Con un argomento prefisso, `C-u C-b S` chiede subito un nome
+(in una modalità che lascia `C-u` a Emacs). Da Lisp:
+
+```elisp
+(ghostel-mux-new-session)                ; nome progressivo
+(ghostel-mux-new-session "produzione")   ; nome esplicito
+(ghostel-mux "produzione")              ; seleziona o crea
+```
+
+Con sessioni già presenti, `C-c m` apre il selettore e permette anche di
+crearne una scrivendo un nome nuovo. `C-b : new-session` crea senza prompt
+aggiuntivo; per rinominare usa `C-b $` o `rename-session`.
+
+## Gerarchia e numerazione
+
+| Oggetto | Contenuto | Nome visibile |
+|---|---|---|
+| Sessione | Finestre Mux | Nome progressivo o scelto |
+| Finestra Mux | Un layout e i suoi pannelli | W1, W2… nella sessione |
+| Pannello | Buffer Ghostel e processo | P1, P2… nella finestra |
+
+Una finestra Mux è un layout intero; una finestra **Emacs** ne visualizza
+un pannello. Ogni terminale ha un solo proprietario: mostrare il suo buffer
+altrove con `switch-to-buffer` non ne cambia l'appartenenza. I comandi di
+spostamento, invece, la cambiano davvero.
+
+La barra usa `produzione:2.3`: sessione **produzione**, finestra **2**,
+pannello **3**. Il buffer si chiama `*mux:produzione:2.3*`.
+Chiudendo, spostando o riordinando, i numeri tornano contigui da 1 nei
+rispettivi genitori e i nomi dei buffer si aggiornano.
+
+Il vecchio **B** era un contatore dei buffer condiviso dalle finestre di una
+sessione. È stato rimosso dall'interfaccia: W e P bastano per indicare la
+posizione. L'identità reale resta un ID interno stabile, indipendente dal
+nome: rinumerare non riavvia processi e non rinomina log già aperti.
+Eventuali buffer estranei con un nome coincidente sono conservati; Emacs
+aggiunge un suffisso al nome del terminale.
+
+## Albero, anteprima e spostamenti
+
+`C-b b` apre un buffer in stile Dired, con titolo, promemoria dei tasti,
+righe selezionabili e rami comprimibili. È un gestore di terminali:
+non esegue operazioni sui file del filesystem.
+
+| Nell'albero | Azione |
 |---|---|
-| `C-b b` | Apre l'albero di tutte le sessioni, finestre e pannelli |
-| `C-b m` | Sposta il pannello selezionato in un'altra finestra, anche di un'altra sessione |
-| `C-b M` | Sposta l'intera finestra nella sessione scelta |
-| `C-b A` | Attiva/disattiva il tiling automatico della finestra corrente |
+| `n` / `p`, frecce | Cambia riga e aggiorna l'anteprima |
+| `TAB` | Espande/comprime sessione o finestra |
+| `RET`, doppio clic | Visita la voce nel suo layout |
+| `SPC` | Mostra/nasconde l'anteprima laterale |
+| `R` | Rinomina sessione, finestra o pannello |
+| `m` | Sceglie una destinazione e trasferisce la voce |
+| `M-↑` / `M-↓` | Riordina prima/dopo il fratello precedente/successivo |
+| Trascinamento | Riordina o cambia proprietario |
+| `a` | Attiva/disattiva il tiling della finestra |
+| `g` | Aggiorna |
+| `q` | Chiude l'albero e ripristina i terminali |
 
-Nell'albero: `n`/`p` o frecce per muoversi, `TAB` per espandere/comprimere,
-`RET` per aprire l'oggetto nel suo layout, `m` per spostare la finestra o il
-pannello sulla riga corrente, `a` per il tiling, `g` per aggiornare e `q`
-per tornare ai terminali. L'albero occupa temporaneamente il frame e mostra
-la vera appartenenza, i numeri P/B e lo stato AUTO TILE/MANUAL, SYNC e ZOOM.
+L'anteprima è una **copia di sola lettura del testo renderizzato** del
+pannello selezionato, aggiornata navigando e durante i refresh.
+Se selezioni una sessione/finestra, mostra il suo pannello attivo.
+Non collega la shell a quella vista e non può inviare input, anche con SYNC
+abilitata. Mostra la coda renderizzata, fino a 100.000 caratteri: per cercare
+o copiare lo scrollback completo, visita il terminale e usa la copy mode.
+Non è una riproduzione delle immagini o di ogni dettaglio grafico del terminale.
+In un frame troppo stretto l'anteprima laterale non viene aperta.
 
-Il selettore di destinazione di un pannello elenca tutte le finestre delle
-sessioni aperte. La voce `nome-sessione / [new window]` crea una finestra
-contenente il pannello trasferito, senza avviare un'altra shell. `C-g`
-annulla la scelta. Dal terminale lo spostamento segue l'oggetto nella nuova
-posizione; dall'albero si resta nell'albero.
+```elisp
+(setq ghostel-mux-tree-preview nil) ; avvia l'albero senza anteprima
+```
 
-Spostare conserva buffer, processo, connessione SSH, scrollback e file di
-log. Fra finestre della stessa sessione il numero B resta uguale; cambiando
-sessione viene assegnato il prossimo B libero della destinazione e il nome
-del buffer si aggiorna. Gli ID interni e il percorso del log restano quelli
-originali. La directory della shell non cambia; una finestra trasferita
-conserva anche la directory iniziale usata per i suoi futuri split.
-Le finestre e le sessioni lasciate vuote vengono rimosse.
+### Trascinamento
 
-**Dopo uno spostamento la SYNC viene disattivata nelle finestre coinvolte.**
-Riattivala con `C-b y` dopo aver controllato il nuovo gruppo. Per spostare
-un pannello vengono ricostruiti i layout della finestra di partenza e di
-arrivo, anche se manuali, e si esce dal loro zoom. Spostare una finestra
-intera ne conserva invece layout e zoom. Le altre finestre della sessione
-di destinazione mantengono le proprie impostazioni.
+- **Pannello → pannello**: inserisce sopra/sotto quella voce, anche fra
+  finestre e sessioni diverse.
+- **Pannello → finestra**: lo aggiunge a quella finestra.
+- **Pannello → sessione**: crea nella destinazione una nuova finestra
+  contenente il pannello trasferito.
+- **Finestra → finestra**: inserisce sopra/sotto la finestra indicata,
+  cambiando sessione quando necessario.
+- **Finestra → sessione**: trasferisce la finestra alla fine della sessione.
+
+In Emacs grafico, la metà superiore/inferiore della riga sceglie
+prima/dopo. Nel terminale, dove manca la frazione di pixel, un trascinamento
+verso il basso inserisce dopo e verso l'alto prima.
+Le sessioni sono contenitori; non vengono trascinate dentro altre sessioni.
+Un rilascio fuori dalle righe non modifica l'albero.
+`M-↑/↓` e `m` offrono le stesse operazioni senza mouse.
+
+### Spostamento da terminale
+
+`C-b m` sposta il pannello; `C-b M` sposta tutta la finestra.
+Nel selettore dei pannelli, `sessione / [new window]` crea la nuova finestra
+senza avviare un'altra shell. `C-g` annulla. Dal terminale si segue l'oggetto
+trasferito; dall'albero si resta nell'albero.
+
+Spostare conserva processo, connessione SSH, buffer, scrollback e log.
+Le finestre e sessioni rimaste vuote vengono rimosse. **Le finestre coinvolte
+hanno SYNC disattivata dopo uno spostamento/riordino**: riattivala con `C-b y`
+dopo avere controllato il nuovo gruppo.
+
+Per spostare/riordinare pannelli si ricostruiscono i layout coinvolti e si
+esce dal loro zoom. Trasferire una finestra intera ne conserva invece layout,
+zoom e directory iniziale. Se la geometria non è disponibile, l'operazione
+viene rifiutata prima di cambiare appartenenza.
+
+## Tiling automatico
 
 Il tiling automatico è attivo per default: aggiungendo o eliminando un
 pannello, anche quando termina la shell, i pannelli della finestra vengono
@@ -239,78 +247,18 @@ Se il frame è troppo piccolo, una creazione/spostamento viene rifiutata
 prima del trasferimento; dopo una chiusura il ricalcolo può restare in
 attesa di spazio, con SYNC disattivata e le altre shell conservate.
 
-### Aggiornare dalla 0.1.9
-
-Aggiorna il clone con `git pull --ff-only`, poi carica il nuovo sorgente:
-
-```text
-M-x load-file RET ~/.emacs.d/lisp/ghostel-mux/ghostel-mux.el RET
-M-x ghostel-mux-refresh RET
-```
-
-Puoi mantenere aperte le shell. I layout già aperti vengono conservati;
-il tiling automatico si applica alla successiva creazione/rimozione, oppure
-subito con `C-b M-5`. Se il clone è altrove, adatta il percorso.
-
-## Primo utilizzo
-
-1. `M-x ghostel-mux`, nome `produzione-osb`: crea la prima sessione e una shell.
-2. `C-b %` o `C-b "`: aggiunge un terminale e riequilibra il layout.
-   Con AUTO TILE disattivato, `%` divide a destra e `"` sotto.
-3. Esegui il tuo comando SSH o PSMP in ciascun terminale, quindi gli eventuali
-   passaggi con sudo. Ogni terminale mantiene la propria connessione.
-4. `C-b y`: attiva SYNC nella finestra corrente. La barra indica il numero
-   di terminali vivi e visibili destinatari. `C-b y` lo disattiva.
-5. `C-b z`: ingrandisce il pannello corrente. Ripetilo per recuperare il layout.
-6. `C-b S`, nome `verifica-jms`: crea un'altra sessione. `C-b s` permette di
-   scegliere tra quelle aperte. Le shell precedenti rimangono attive.
-7. `C-b d`: torna al layout Emacs che c'era prima dell'attach. Le sessioni
-   restano selezionabili con `M-x ghostel-mux`.
-
-Puoi creare sessioni anche da Lisp:
-
-```elisp
-(ghostel-mux-new-session "produzione-osb")
-(ghostel-mux "produzione-osb") ; seleziona, oppure crea se non esiste
-```
-
-## Gerarchia
-
-| Oggetto | Contiene | Identità |
-|---|---|---|
-| Sessione | Una o più finestre del multiplexer | Nome scelto dall'utente |
-| Finestra | Un layout Emacs e un gruppo di pannelli | Indice da 1 e titolo |
-| Pannello | Buffer Ghostel, PTY, scrollback, file di log | ID stabile interno; indice visibile da 1 |
-
-Una *finestra del multiplexer* è un layout intero; una finestra Emacs mostra
-un pannello. I nomi non servono per identificare i destinatari del broadcast:
-un titolo cambiato dalla shell non sposta un terminale tra gruppi.
-
-I numeri delle finestre e dei pannelli vengono ricalcolati sulle rispettive
-liste dopo una chiusura. I log usano gli ID interni immutabili: un file già
-aperto non cambia nome quando rinomini o rinumeri una finestra.
-
-I nomi dei buffer usano un contatore separato per sessione, condiviso dalle
-sue finestre: `*mux:produzione:1*`, `*mux:produzione:2*`, ecc. Nell'intestazione
-`produzione:2/B3` significa sessione produzione, finestra 2, buffer 3.
-Il numero B resta stabile dopo le chiusure; quelli eliminati non vengono
-riutilizzati. Il numero P indica invece la posizione nella finestra corrente.
-Rinominare la sessione aggiorna anche i nomi dei suoi buffer, conservando
-numeri e log. Eventuali buffer estranei con lo stesso nome sono conservati:
-Emacs aggiunge un suffisso al nome del terminale.
-
 ## Tasti
 
 Premi `C-b`, rilascialo, poi premi il tasto indicato. `C-b` è intercettato
 soltanto nei buffer gestiti da Mux e resta disponibile anche nel char mode di
-Ghostel. Durante l'attesa, la barra mostra `PREFIX` usando il tema Emacs.
+Ghostel. Durante l'attesa, la barra mostra `[C-b]` usando il tema Emacs.
 Con `which-key-mode` attivo, aspetta dopo `C-b` per vedere i suggerimenti.
 Anche `C-b g` è un prefisso nativo e mostra i propri sottocomandi.
 
 | Tasto dopo `C-b` | Azione |
 |---|---|
 | `s` | Seleziona una sessione aperta |
-| `S` | Crea una sessione, chiedendone il nome |
+| `S` | Crea subito una sessione con nome progressivo |
 | `a` | Attiva sessione e finestra del terminale selezionato |
 | `$` | Rinomina la sessione |
 | `d` | Detach: torna al precedente layout Emacs |
@@ -325,7 +273,8 @@ Anche `C-b g` è un prefisso nativo e mostra i propri sottocomandi.
 | `o` / `O` | Pannello successivo / precedente, con ritorno circolare |
 | `;` | Ultimo pannello usato |
 | `q` | Mostra i numeri; per due secondi puoi premere `1`…`9` |
-| `P` | Selettore completo dei pannelli, anche oltre il nono |
+| `P` | Pannelli della finestra attiva, con anteprima Consult |
+| `B` | Tutti i terminali Mux, da tutte le sessioni, con anteprima Consult |
 | `b` | Albero sessioni, finestre e pannelli |
 | `m` | Sposta il pannello in un'altra finestra o sessione |
 | `M` | Sposta la finestra in un'altra sessione |
@@ -437,6 +386,39 @@ l'indisponibilità. Per disattivare solo questa anteprima:
 (setq ghostel-mux-pane-preview nil)
 ```
 
+## Buffer Emacs: sessioni visibili e nascoste
+
+**Sì: tutti i terminali vivi restano nella lista generale dei buffer Emacs**,
+anche quando la loro sessione non è selezionata. Mux non li nasconde e non
+imposta filtri globali per `switch-to-buffer`, `consult-buffer` o Ibuffer.
+Il test di regressione crea tre sessioni e controlla che tutti i loro
+terminali siano presenti sia in `buffer-list` sia nel completamento Emacs.
+
+| Comando | Ambito |
+|---|---|
+| `C-x b` / `consult-buffer` | Buffer Emacs, secondo i filtri della tua configurazione |
+| `C-x C-b` / Ibuffer | Buffer Emacs, secondo i filtri di Ibuffer |
+| `C-b B` | Tutti i terminali Mux vivi, in tutte le sessioni |
+| `C-b w` | Finestre della sessione attiva |
+| `C-b P` | Pannelli della finestra attiva |
+| `C-b b` | Intero albero delle appartenenze |
+
+`C-b B` seleziona il terminale e collega la sua finestra proprietaria.
+Se il selettore Emacs mostra soltanto l'ultima sessione, controlla la sorgente
+Consult o i filtri di Ibuffer/workspace; non è l'isolamento previsto da Mux.
+Per verificare direttamente i nomi senza passare dal tuo selettore:
+
+```elisp
+(mapcar #'buffer-name
+        (seq-filter
+         (lambda (buffer)
+           (buffer-local-value 'ghostel-mux-pane-mode buffer))
+         (buffer-list)))
+```
+
+Una shell terminata chiude invece il proprio pannello: quel buffer non è
+più vivo e viene rimosso anche dalla lista generale.
+
 ## Mouse e copia
 
 La selezione col mouse usa il comportamento Ghostel e passa in copy mode.
@@ -475,7 +457,7 @@ destinatari. Due viste dello stesso buffer ricevono una sola consegna.
 Puoi mostrare buffer appartenenti a sessioni diverse nello stesso layout.
 `switch-to-buffer` cambia ciò che vedi, senza cambiare il gruppo Mux attivo.
 Se il gruppo attivo è `Y:1` e selezioni un terminale di `X:2`, la barra mostra
-`SELECTED · LOCAL`, `OWNER X:2` e `ACTIVE Y:1`. La digitazione in X resta
+`[LOCAL]` e `X:2.P`; il tooltip indica anche `Active group: Y:1`. La digitazione in X resta
 locale; `C-b y` continua a commutare SYNC in Y e il messaggio lo esplicita.
 `C-b a` attiva X e la sua finestra 2, ripristinandone il layout e selezionando
 quel terminale. Come ogni cambio finestra, recupera anche il suo stato SYNC.
@@ -487,8 +469,8 @@ Scratch e gli eventuali terminali estranei restano vivi ma non sono visualizzati
 Se SYNC era abilitato, i terminali ripristinati tornano a ricevere input.
 
 **Durante lo zoom l'input è locale al pannello ingrandito.** L'opzione SYNC
-resta memorizzata, ma la barra mostra `SYNC PAUSED (LOCAL)` quando rimane
-un solo destinatario visibile. Con lo zoom out torna `SYNC:n` e il broadcast
+resta memorizzata, ma la barra mostra `[S:-]` quando rimane
+un solo destinatario visibile. Con lo zoom out torna `[S:N]` e il broadcast
 riprende sui pannelli nuovamente visibili. `C-b y` spegne completamente
 l'opzione, così resta spenta anche dopo lo zoom out.
 
@@ -554,107 +536,60 @@ Per usare il backend nativo nei **nuovi** pannelli:
 La modifica non converte i terminali già aperti. Il logger richiede una
 directory locale: non esegue scritture TRAMP nell'output filter.
 
-## Aspetto e integrazione Emacs
+## Barre e colori
 
-Ogni pannello mostra un ruolo esplicito:
+C'è **una sola barra inferiore per pannello**. L'intestazione duplicata è
+stata rimossa. Prima vengono selezione, stati e appartenenza; il titolo usa
+lo spazio restante. I nomi lunghi vengono abbreviati in base alla larghezza.
 
-| Indicazione | Significato |
+| Indicatore | Significato |
 |---|---|
-| `[S]` | Destinatario dell’input sincronizzato dal terminale selezionato |
-| `P2 SELECTED` | Pannello selezionato per l'input |
-| `P1 SYNC TARGET` | Altro pannello visibile incluso nel broadcast |
-| `P1 SELECTED · LOCAL` | Terminale selezionato appartenente a un altro gruppo; input locale |
-| `P1 OTHER GROUP` | Terminale di un altro gruppo; escluso da SYNC del gruppo attivo |
-| `P1 INACTIVE` | Non selezionato e non destinatario di SYNC; il processo continua |
-| `SYNC OFF (LOCAL)` | SYNC disattivato, input locale |
-| `SYNC:3 [P1,P2,P3]` | Numero e identità dei destinatari visibili |
-| `SYNC PAUSED (LOCAL) · ZOOM` | Zoom attivo, input locale; SYNC riprende con lo zoom out |
+| `●` / `○` | Pannello selezionato / non selezionato |
+| `lab:2.3` | Sessione lab, finestra 2, pannello 3 |
+| `[S:8]` | Questo pannello riceve SYNC insieme agli altri 7 visibili |
+| `[S:-]` | SYNC memorizzata ma input locale, per esempio in zoom |
+| `[LOCAL]` | Terminale di un'altra finestra/sessione rispetto a quella collegata |
+| `[COPY]` | Copy/Emacs mode |
+| `[Z]` | Zoom |
+| `[C-b]` | Prefisso in attesa del comando |
+| `[VIEW]` | Anteprima Consult, input bloccato |
+| `[!LOG]` / `[EXIT]` | Errore di registrazione / processo terminato |
 
-L'indicatore `[S]` compare all'inizio dell'intestazione, prima del nome,
-su tutti i destinatari del broadcast, incluso il terminale selezionato.
-Tiene conto dei pannelli vivi e visibili e della sessione attiva: sparisce
-in zoom, durante le anteprime e quando selezioni un buffer estraneo al
-gruppo o un buffer di testo. L'opzione SYNC può restare memorizzata anche
-quando non ci sono indicatori. In copy mode i normali comandi di copia
-restano locali, ma un incolla esplicito nel terminale può ancora essere
-sincronizzato: `[S]` continua quindi a indicarne i destinatari. Il colore
-del nome identifica soltanto la sessione e non cambia con SYNC.
+Senza indicatore S, SYNC non è abilitata per questo gruppo.
+I destinatari dipendono dal terminale realmente selezionato per l'input,
+non dalla finestra temporaneamente selezionata durante il ridisegno Emacs.
+In copy mode i comandi di copia sono locali; un incolla esplicito verso il
+terminale può ancora essere sincronizzato.
 
-La barra inferiore mette ruolo e SYNC prima dei titoli lunghi. L'intestazione
-mostra prima sessione, numero della finestra e numero stabile del buffer,
-poi ruolo e titolo del terminale. Nelle viste miste indica anche il gruppo
-attivo. Passando il mouse sulle barre trovi la spiegazione dei comandi e
-dell’ambito SYNC. Lo stato
-SYNC resta leggibile quando compare PREFIX. Nei pannelli stretti Emacs può
-troncare il testo: lo zoom permette di leggerlo per intero.
+Passando il mouse sulla barra trovi nome completo, titolo, gruppo collegato,
+elenco dei destinatari, tiling e tasti di copia. L'albero raccoglie le
+informazioni sulle finestre senza ripeterle otto volte in otto barre.
+Con finestre estremamente strette anche la forma compatta può essere troncata.
 
-Mux conserva gli sfondi del tema Emacs. Solo il **nome della sessione
-nell'intestazione** riceve un accento colorato: tutti i suoi pannelli usano
-lo stesso colore, anche nelle anteprime e nelle viste miste. Numeri, titoli,
-COPY, SYNC e barra inferiore conservano i rispettivi stili. Il colore indica
-l'appartenenza: non significa che il terminale riceverà input sincronizzato.
-
-La palette comprende otto tonalità, con varianti per temi chiari e scuri.
-L'assegnazione sceglie un colore libero o, se tutti sono già usati, quello
-meno usato tra le sessioni aperte. Non cambia quando rinomini la sessione,
-passi a un'altra finestra o ricarichi il sorgente. La tinta si adatta al tema;
-l'associazione con la sessione resta la stessa. Dopo otto sessioni i colori
-possono ripetersi: il nome testuale resta il riferimento preciso.
-
-Per disattivare gli accenti:
+Gli **sfondi seguono il tema Emacs**. Il nome della sessione ha un accento
+stabile, condiviso da tutti i suoi terminali e dalle righe dell'albero.
+La palette comprende otto tonalità con varianti chiare/scure; dopo otto
+sessioni i colori possono ripetersi. Il colore identifica il proprietario,
+mai i destinatari SYNC.
 
 ```elisp
-(setq ghostel-mux-session-colors nil)
+(setq ghostel-mux-session-colors nil) ; disattiva soltanto gli accenti
 ```
 
-Puoi riattivarli con `t`; le assegnazioni precedenti vengono conservate.
-`M-x customize-group RET ghostel-mux RET` espone l'opzione e le otto facce
-`ghostel-mux-session-*`, personalizzabili anche con `customize-face`.
-`ghostel-mux-session-color-faces` permette di sostituire o ampliare la palette:
-usa facce che impostano solo il primo piano. Rimuovere una faccia dalla lista
-riassegna le sessioni che la usavano. Una lista vuota disattiva gli accenti.
-Dopo modifiche da Lisp puoi richiamare `M-x ghostel-mux-refresh`.
+Personalizza la palette con `ghostel-mux-session-color-faces` e le facce
+`ghostel-mux-session-*`, poi richiama `M-x ghostel-mux-refresh`.
+Gli accenti non cambiano con rinomina, cambio sessione o reload.
+I colori ANSI espliciti prodotti dai programmi restano quelli del terminale.
 
-I colori predefiniti sono distinguibili anche in un terminale a 256 colori.
-Su terminali con meno di 89 colori si usa il testo del tema, mantenendo i nomi.
-Le associazioni durano quanto le sessioni nel processo Emacs; non vengono
-salvate tra riavvii. PREFIX e SYNC rimangono riconoscibili tramite i loro
-indicatori testuali e stili; i colori ANSI espliciti dei programmi restano tali.
+Il titolo segue l'OSC title della shell, salvo etichette manuali.
+L'apertura di file remoti resta affidata a Ghostel/TRAMP; Mux non deduce una
+catena SSH/PSMP/sudo dall'output. Gli split usano la directory iniziale della
+finestra, evitando di avviare involontariamente una nuova shell TRAMP.
 
-In copy mode, `[COPY MODE]` compare all'inizio dell'intestazione e della
-barra inferiore, prima dei titoli. L'intestazione ricorda `q` per uscire,
-`M-w` per copiare restando nella modalità e `C-w` per copiare e uscire.
-`C-b [` mostra anche un messaggio all'ingresso. L'indicatore segue la modalità
-effettiva di Ghostel, anche entrando tramite i suoi comandi o il mouse.
-
-L'intestazione mostra numero, titolo e selezione del pannello. Il titolo
-automatico segue l'OSC title della shell quando disponibile. Un'etichetta
-manuale prevale finché non viene cancellata. Non viene eseguito polling remoto
-per indovinare il processo in primo piano.
-
-La presentazione usa header line e mode line Emacs per pannello. Non riproduce
-pixel per pixel i bordi e l'unica status bar inferiore di tmux; non cambia il
-tema globale né i buffer Ghostel non gestiti.
-
-Personalizza le facce `ghostel-mux-normal`, `ghostel-mux-sync`,
-`ghostel-mux-prefix`, `ghostel-mux-active` e `ghostel-mux-copy`
-con `M-x customize-group RET ghostel-mux`.
-
-Il layout conserva anche eventuali buffer Emacs aggiunti durante il lavoro.
-I comandi di layout espliciti (Spazio o `C-b M-5`) ricostruiscono invece la griglia dei
-terminali. Non usare simultaneamente un altro gestore di workspace per
-riorganizzare lo stesso frame mentre Mux è attached; fai detach prima.
-
-Per bilanciare le dimensioni mantenendo la disposizione corrente, Emacs
-offre `C-x +` (`balance-windows`, disponibile in semi-char o copy mode).
-Da Mux puoi anche usare `C-b : balance`: esce dall'eventuale zoom e bilancia
-la disposizione completa. `C-b M-5` ricrea invece il layout tiled.
-
-L'apertura di file remoti resta affidata all'integrazione Ghostel/TRAMP
-esistente. Mux mantiene i terminali separati, ma non deduce automaticamente
-una catena PSMP/SSH/sudo dalla schermata del terminale. Le nuove divisioni
-usano la directory iniziale della finestra, evitando che un cambio di directory
-rilevato sul remoto faccia partire involontariamente una nuova shell TRAMP.
+Per bilanciare senza ricreare la disposizione usa `C-x +` o
+`C-b : balance`. `C-b M-5` ricostruisce invece la griglia dei terminali.
+Evita che due gestori di workspace riorganizzino simultaneamente lo stesso
+frame: fai detach prima di affidarlo all'altro gestore.
 
 ## Durata delle sessioni
 
@@ -680,52 +615,42 @@ locale con SSH; non tornerai al prompt locale al termine della connessione.
 
 ## Verifiche e diagnosi
 
-La versione consegnata è stata compilata e provata con **Emacs 29.3**,
-**Ghostel 0.40.0 e 0.53.0** e i rispettivi moduli Linux x86_64, con shell Bash e PTY reali.
-I test includono input da tastiera mediante keyboard macro, mouse sintetico,
-layout, sessioni, zoom, log, backend nativo e due terminali con modalità di
-codifica delle frecce differenti. I dettagli sono in `VALIDATION.md`.
+La 0.3.0 è verificata con **Emacs 30.1 su Linux**, Bash e PTY reali.
+La suite copre Ghostel 0.40.0 e 0.53.0, selettori Consult, input da tastiera,
+spostamenti, rinumerazione, anteprima dell'albero e otto pannelli.
+Le prove e i limiti sono riportati in [VALIDATION.md](VALIDATION.md);
+i risultati sono in [test-results.txt](test-results.txt).
+Le schermate provengono da Emacs grafico con Ghostel 0.53.0.
 
-Non è stata eseguita una prova con il tuo Emacs grafico Windows/WSL,
-le tue connessioni CyberArk o i tuoi server aziendali.
-
-`M-x ghostel-mux-doctor` mostra l'Emacs in uso, il percorso di Ghostel e le
-funzioni attese dall'adattatore. Il controllo blocca l'avvio se manca un punto
-di integrazione richiesto; la sola presenza delle funzioni non certifica
-la compatibilità semantica di una futura versione Ghostel.
-
-Per ripetere i test con Ghostel installato normalmente:
+`M-x ghostel-mux-doctor` mostra versione Emacs, percorso Ghostel e funzioni
+attese dall'adattatore. Ripeti la suite con:
 
 ```sh
 cd ~/.emacs.d/lisp/ghostel-mux
 make test
 ```
 
-Oppure con checkout locali, indicando i percorsi effettivi:
+Oppure usando checkout locali:
 
 ```sh
 GHOSTEL_LISP=/percorso/ghostel/lisp \
 COMPAT_LISP=/percorso/compat \
-GHOSTEL_MODULE_DIR=/percorso/ghostel \
+GHOSTEL_MODULE_DIR=/percorso/modulo \
 make test
 ```
 
-I test aprono soltanto shell locali di prova, usano directory temporanee e le
-rimuovono al termine. Non usano i tuoi host e non richiedono accesso alla rete.
-Il modulo deve essere già disponibile: durante i test non viene scaricato.
+I test usano soltanto shell e directory temporanee locali. Non contattano
+server aziendali e non scaricano moduli.
+Per le prove Consult rendi disponibile Consult nel load-path.
 
-Per rimuovere il pacchetto chiudi le sue sessioni, rimuovi le forme dalla
-configurazione e riavvia Emacs. È disponibile anche
-`M-x unload-feature RET ghostel-mux` dopo avere chiuso tutte le sessioni.
-I file di log rimangono sul disco.
+Per rimuovere Mux, chiudi le sessioni, rimuovi il blocco dall'init e riavvia
+Emacs; i file di log restano sul disco.
 
 ## Riferimenti
 
-- [Ghostel e documentazione delle API](https://dakra.github.io/ghostel/)
-- [Sorgente Ghostel](https://github.com/dakra/ghostel)
+- [Ghostel](https://github.com/dakra/ghostel)
+- [Documentazione Ghostel](https://dakra.github.io/ghostel/)
+- [Cronologia delle modifiche](CHANGELOG.md)
 
-L'adattatore è stato verificato sul blob `ghostel.el`
-`1c496a1fde8285dce98ba2ec4dd52b77bd066166`, che dichiara versione 0.53.0.
-Ghostel e il relativo modulo non sono inclusi nell'archivio.
-
-Licenza di Ghostel Mux: GPL-3.0-or-later; vedi `COPYING`.
+Ghostel e il modulo nativo non sono inclusi nel repository.
+Licenza: GPL-3.0-or-later, vedi [COPYING](COPYING).

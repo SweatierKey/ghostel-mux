@@ -1,39 +1,51 @@
-;;; example-init.el --- Example configuration -*- lexical-binding: t; -*-
+;;; example-init.el --- Install and configure Ghostel Mux -*- lexical-binding: t; -*-
 
-;; Ghostel must already work: try M-x ghostel first. Tested on 0.40 and 0.53.
-;; Start on WSL locally; run your SSH/PSMP command inside each pane.
+;; Prerequisites: Git and a working Ghostel installation (M-x ghostel).
 (use-package ghostel-mux
   :ensure nil
   :load-path "~/.emacs.d/lisp/ghostel-mux/"
   :commands (ghostel-mux)
   :bind ("C-c m" . ghostel-mux)
   :init
+  ;; Clone once, directly into the requested directory.
+  ;; An existing installation is kept; updates are explicit git pull operations.
+  (let* ((dir (expand-file-name "~/.emacs.d/lisp/ghostel-mux/"))
+         (source (expand-file-name "ghostel-mux.el" dir)))
+    (unless (file-exists-p source)
+      (when (file-exists-p (directory-file-name dir))
+        (error "Ghostel Mux: %s exists but ghostel-mux.el is missing" dir))
+      (unless (executable-find "git")
+        (error "Ghostel Mux: install Git and restart Emacs"))
+      (make-directory (file-name-directory (directory-file-name dir)) t)
+      (let ((stage (make-temp-file
+                    (expand-file-name ".ghostel-mux-install-"
+                                      (file-name-directory (directory-file-name dir))) t)))
+        (unwind-protect
+            (progn
+              (unless (zerop (process-file
+                             "git" nil "*Ghostel Mux install*" nil "clone" "--"
+                             "https://github.com/SweatierKey/ghostel-mux.git" stage))
+                (error "Ghostel Mux: clone failed; see *Ghostel Mux install*"))
+              (unless (file-exists-p (expand-file-name "ghostel-mux.el" stage))
+                (error "Ghostel Mux: incomplete checkout"))
+              (rename-file stage (directory-file-name dir)))
+          (when (file-directory-p stage) (delete-directory stage t))))))
   (setq ghostel-mux-directory (expand-file-name "~")
         ghostel-mux-scrollback-bytes (* 50 1024 1024)
         ghostel-mux-log-output t))
 
-;; If installed elsewhere, change :load-path above to the actual directory.
-;; Logs default to ghostel-mux-logs/ inside user-emacs-directory.
-
-;; In managed terminals: C-b prefix, C-b y SYNC, C-b s sessions.
-;; Outside them: C-b keeps its normal Emacs binding.
-;; To use Ghostel's native PTY backend in new panes, disable recording:
-;; (setq ghostel-mux-log-output nil)
-
-;; Session accents are enabled by default, only on the name in each header.
-;; To disable them without changing the theme:
-;; (setq ghostel-mux-session-colors nil)
-;; Customize the palette through M-x customize-group RET ghostel-mux RET.
-
-;; C-b o / C-b O: next / previous pane. C-b w: active-session windows with Consult preview.
-;; To disable only window previews:
-;; (setq ghostel-mux-window-preview nil)
-
-;; C-b P: pane buffer preview with Consult.
-;; (setq ghostel-mux-pane-preview nil) ; disable pane previews only
-
-;; C-b b: tree; C-b m: move pane; C-b M: move window; C-b A: auto tiling.
-;; Auto tiling is enabled by default. To start with manual layouts instead:
-;; (setq ghostel-mux-auto-tile nil)
-
+;; Optional settings (defaults shown):
+;; (setq ghostel-mux-session-colors t
+;;       ghostel-mux-auto-tile t
+;;       ghostel-mux-tree-preview t
+;;       ghostel-mux-session-preview t
+;;       ghostel-mux-window-preview t
+;;       ghostel-mux-pane-preview t)
+;;
+;; C-b S creates a session immediately; C-b $ renames it.
+;; C-b b: tree, with SPC preview, R rename, m move, M-up/down reorder.
+;; C-b B: ALL terminal buffers. C-b w: windows of the attached session.
+;; C-b P: panes of the current window. C-b y: visible panes SYNC only.
+;; C-b g: Ghostel's original C-c map, including mode switching.
+;; Set ghostel-mux-log-output to nil for Ghostel's native PTY backend.
 ;;; example-init.el ends here

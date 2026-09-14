@@ -1,3 +1,24 @@
+# 0.3.0
+
+- Albero in stile Dired con titolo, tasti, selezione delle righe, preview
+  laterale di sola lettura, rinomina e riordino da tastiera.
+- Trascinamento sopra/sotto pannelli e finestre, anche fra sessioni;
+  rilascio su una sessione per creare una finestra con il pannello trasferito.
+- Fix del selettore [new window]: il risultato di nreverse viene conservato,
+  rendendo risolvibili tutte le destinazioni del prompt.
+- C-b S e la prima apertura creano sessioni con nomi progressivi senza prompt;
+  C-b $ rinomina successivamente.
+- Nomi *mux:sessione:W.P* coerenti con eliminazioni, riordini e trasferimenti.
+  Il vecchio contatore B non compare più nell'interfaccia.
+- Una sola barra compatta, adattata alla larghezza, con selezione, SYNC,
+  COPY, zoom e accenti per sessione. Dettagli nel tooltip e nell'albero.
+- C-b B seleziona qualsiasi terminale Mux di tutte le sessioni, con Consult;
+  nessun filtro globale viene imposto alla lista buffer Emacs.
+- README ed example-init.el installano il clone via use-package nella
+  directory ~/.emacs.d/lisp/ghostel-mux/. Installazione atomica e retry.
+- 88 test ERT su Ghostel 0.40.0 e 0.53.0, Emacs 30.1; verifica grafica di
+  otto pannelli e drag, prova di installazione e reload dalla 0.2.0.
+
 # 0.2.0
 
 - Albero sessioni/finestre/pannelli (`C-b b`), con navigazione, rami

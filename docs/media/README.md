@@ -1,3 +1,10 @@
+# Schermate 0.3.0
+
+[eight-panes.png](eight-panes.png) e [tree.png](tree.png) mostrano Emacs 30.1 GTK,
+Ghostel 0.53.0 e il tema Wombat, con shell Bash locali.
+
+La GIF e il video sotto sono della 0.1.9 e precedono le nuove barre.
+
 # Demo di Ghostel Mux
 
 La GIF e il video mostrano Ghostel Mux **0.1.9** realmente eseguito in
