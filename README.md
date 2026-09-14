@@ -1,4 +1,4 @@
-# Ghostel Mux 0.3.0
+# Ghostel Mux 0.3.1
 
 Un multiplexer per Emacs costruito sopra Ghostel: **sessioni → finestre →
 pannelli**, con tasti ispirati a tmux. Ogni pannello è un vero terminale
@@ -227,6 +227,10 @@ ridistribuiti. Con AUTO TILE, `%` e `"` aggiungono entrambi un pannello al
 layout automatico; con MANUAL mantengono le rispettive direzioni di split.
 `C-b SPC` sceglie il layout (tiled, orizzontale, verticale) usato anche nei
 ricalcoli successivi. `C-b M-5` torna alla disposizione tiled.
+
+L'ordine visivo segue l'ordine dei pannelli nell'albero: da sinistra a destra
+in ogni riga, poi dall'alto verso il basso. Vale anche dopo riordini,
+trasferimenti e chiusure. Ricreare il layout conserva il terminale selezionato.
 
 Puoi ridimensionare con il mouse o con `C-b C-freccia` / `C-b M-freccia`:
 le dimensioni restano fino alla successiva aggiunta/rimozione. Con `C-b A`
@@ -586,6 +590,12 @@ L'apertura di file remoti resta affidata a Ghostel/TRAMP; Mux non deduce una
 catena SSH/PSMP/sudo dall'output. Gli split usano la directory iniziale della
 finestra, evitando di avviare involontariamente una nuova shell TRAMP.
 
+Il progetto di awareness host/utente/directory e apertura Dired con `C-j`
+è descritto in [Contesto del pannello e TRAMP](docs/context-awareness.md).
+È una proposta: la 0.3.1 non aggiunge questo tasto né inietta codice remoto.
+La comunicazione del contesto richiede collaborazione della shell; l'accesso
+ai file richiede inoltre un percorso TRAMP valido.
+
 Per bilanciare senza ricreare la disposizione usa `C-x +` o
 `C-b : balance`. `C-b M-5` ricostruisce invece la griglia dei terminali.
 Evita che due gestori di workspace riorganizzino simultaneamente lo stesso
@@ -615,12 +625,14 @@ locale con SSH; non tornerai al prompt locale al termine della connessione.
 
 ## Verifiche e diagnosi
 
-La 0.3.0 è verificata con **Emacs 30.1 su Linux**, Bash e PTY reali.
+La 0.3.1 è verificata con **Emacs 29.3 su Linux**, Bash e PTY reali:
+**91 test ERT superati su ciascuna versione Ghostel**.
 La suite copre Ghostel 0.40.0 e 0.53.0, selettori Consult, input da tastiera,
-spostamenti, rinumerazione, anteprima dell'albero e otto pannelli.
+spostamenti, rinumerazione, anteprima dell'albero e ordine visivo del tiling.
 Le prove e i limiti sono riportati in [VALIDATION.md](VALIDATION.md);
 i risultati sono in [test-results.txt](test-results.txt).
-Le schermate provengono da Emacs grafico con Ghostel 0.53.0.
+Le schermate provengono dalla verifica grafica della 0.3.0 con Emacs 30.1
+e Ghostel 0.53.0; precedono il fix dell'ordine dei pannelli.
 
 `M-x ghostel-mux-doctor` mostra versione Emacs, percorso Ghostel e funzioni
 attese dall'adattatore. Ripeti la suite con:

@@ -1,3 +1,14 @@
+# 0.3.1
+
+- Tiling ordinato come l'albero: da sinistra a destra per riga, dall'alto
+  verso il basso. La divisione ricorsiva non decide più l'ordine dei buffer.
+- Ordine coerente per AUTO TILE, C-b M-5, riordini, trasferimenti e chiusure;
+  il ricalcolo esplicito conserva il terminale selezionato.
+- 91 test ERT su Ghostel 0.40.0 e 0.53.0, Emacs 29.3; nuove regressioni
+  sull'ordine visivo e sulla selezione durante i cambi di layout.
+- Documento di proposta per l'awareness host/utente/directory: distingue
+  notifiche della shell e accesso TRAMP. Nessuna integrazione remota attivata.
+
 # 0.3.0
 
 - Albero in stile Dired con titolo, tasti, selezione delle righe, preview

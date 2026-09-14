@@ -1,6 +1,6 @@
 ;;; ghostel-mux.el --- Tmux-style workspaces for Ghostel -*- lexical-binding: t; -*-
 
-;; Version: 0.3.0
+;; Version: 0.3.1
 ;; Package-Requires: ((emacs "29.1") (ghostel "0.40.0"))
 ;; Keywords: terminals, convenience
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -330,7 +330,6 @@ Use FRAME's dimensions.  No shell is created or destroyed."
         (let ((ghostel-mux--restoring t))
           (delete-other-windows)
           (ghostel-mux--tile (selected-window) panes (gethash w ghostel-mux--layouts "tiled"))
-          (balance-windows)
           (dolist (win (window-list nil 'no-minibuffer))
             (set-window-parameter win 'ghostel-mux-pane-id
                                   (ghostel-mux--pane-id
@@ -1458,7 +1457,6 @@ This explicit global selector does not change Emacs buffer-list filtering."
         (progn
           (delete-other-windows)
           (ghostel-mux--tile (selected-window) ps layout)
-          (balance-windows)
           (puthash w layout ghostel-mux--layouts)
           (remhash w ghostel-mux--dirty-layouts)
           (ghostel-mux--capture) (ghostel-mux--refresh))
@@ -1506,16 +1504,37 @@ This explicit global selector does not change Emacs buffer-list filtering."
   "Show the current date and time in the echo area."
   (interactive) (message "%s" (format-time-string "%H:%M:%S  %d-%b-%Y")))
 (defun ghostel-mux--tile (win ps layout)
-  (if (null (cdr ps))
-      (set-window-buffer win (ghostel-mux--pane-buffer (car ps)))
-    (let* ((n (/ (length ps) 2))
+  "Arrange PS left to right within rows, with rows ordered top to bottom.
+Build and balance the geometry before assigning buffers: recursive split
+order is not necessarily reading order.  Preserve the selected terminal."
+  (let* ((buffer (window-buffer win))
+         (leaves (ghostel-mux--tile-leaves win (length ps) layout)))
+    (balance-windows)
+    (setq leaves
+          (sort leaves
+                (lambda (a b)
+                  (let ((ea (window-pixel-edges a)) (eb (window-pixel-edges b)))
+                    (if (= (nth 1 ea) (nth 1 eb))
+                        (< (car ea) (car eb))
+                      (< (nth 1 ea) (nth 1 eb)))))))
+    (cl-mapc (lambda (leaf pane)
+               (set-window-buffer leaf (ghostel-mux--pane-buffer pane)))
+             leaves ps)
+    (when-let ((selected (cl-find buffer leaves :key #'window-buffer)))
+      (select-window selected))))
+
+(defun ghostel-mux--tile-leaves (win count layout)
+  "Split WIN into COUNT leaves for LAYOUT, without assigning pane buffers."
+  (if (= count 1)
+      (list win)
+    (let* ((n (/ count 2))
            (side (cond ((equal layout "horizontal") 'right)
                        ((equal layout "vertical") 'below)
                        ((> (window-total-width win) (* 2 (window-total-height win))) 'right)
                        (t 'below)))
            (other (split-window win nil side)))
-      (ghostel-mux--tile win (seq-take ps n) layout)
-      (ghostel-mux--tile other (nthcdr n ps) layout))))
+      (append (ghostel-mux--tile-leaves win n layout)
+              (ghostel-mux--tile-leaves other (- count n) layout)))))
 
 ;;; Closing / external buffer death
 (defun ghostel-mux--confirm-close (ps description)
