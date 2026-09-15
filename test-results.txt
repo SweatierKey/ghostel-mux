@@ -1,333 +1,471 @@
-Ghostel Mux 0.3.1 — Emacs 29.3, Linux x86_64
+Ghostel Mux 0.4.0 — Emacs 30.1, Linux x86_64
 
-Test-only runtime setting: comp-enable-subr-trampolines=nil
-
-Ghostel 0.40.0
-Running 91 tests (2026-09-14 13:22:13+0200, selector ‘t’)
-   passed   1/91  mux-all-session-buffers-remain-in-emacs-and-global-selector (0.011738 sec)
-   passed   2/91  mux-attach-from-tree-cleans-preview-buffer (0.004768 sec)
-   passed   3/91  mux-audit-outlives-scrollback-eviction (0.028722 sec)
-   passed   4/91  mux-auto-tile-defers-while-zoomed (0.007915 sec)
+Ghostel 0.53 / Bash 5.2 — full suite
+Running 110 tests (2026-09-14 22:32:48+0000, selector `t')
+   passed    1/110  mux-all-session-buffers-remain-in-emacs-and-global-selector (0.028438 sec)
+   passed    2/110  mux-attach-from-tree-cleans-preview-buffer (0.003971 sec)
+   passed    3/110  mux-audit-outlives-scrollback-eviction (0.050671 sec)
+   passed    4/110  mux-auto-tile-defers-while-zoomed (0.005482 sec)
 one:1: AUTO TILE ON
-   passed   5/91  mux-auto-tile-disabled-preserves-explicit-split-direction (0.004040 sec)
-   passed   6/91  mux-auto-tile-hidden-exit-retiled-on-return (0.007539 sec)
-   passed   7/91  mux-auto-tile-reflows-after-exit-and-keeps-manual-sizes-until-change (0.021799 sec)
+   passed    5/110  mux-auto-tile-disabled-preserves-explicit-split-direction (0.003144 sec)
+   passed    6/110  mux-auto-tile-hidden-exit-retiled-on-return (0.006285 sec)
+   passed    7/110  mux-auto-tile-reflows-after-exit-and-keeps-manual-sizes-until-change (0.032659 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed   8/91  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.053625 sec)
-one:1 — SYNC:3 [P1,P2,P3]
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed   9/91  mux-broadcast-marker-matches-delivery-and-pauses-with-local-input (0.010827 sec)
-   passed  10/91  mux-buffer-paths-track-session-window-and-pane-positions (0.046763 sec)
-   passed  11/91  mux-closing-pane-cleans-membership-and-renumbers-windows (0.004919 sec)
-   passed  12/91  mux-command-minibuffer-accepts-text-and-followup-prompt (0.002929 sec)
-   passed  13/91  mux-consult-pane-keyboard-selects-buffer-within-zoom (0.023550 sec)
-   passed  14/91  mux-consult-session-selection-and-cancel-restore-ownership (0.007231 sec)
-   passed  15/91  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.013002 sec)
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-Mark set
-   passed  16/91  mux-copy-drag-selection-persists-after-release (0.001756 sec)
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-Copy mode: Press any key to exit
-   passed  17/91  mux-copy-indicators-follow-actual-input-mode (0.002762 sec)
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  18/91  mux-copy-is-persistent-and-never-deletes-output (0.001454 sec)
-   passed  19/91  mux-destination-selector-keeps-every-candidate (0.005772 sec)
-   passed  20/91  mux-detach-restores-editor-and-keeps-processes (0.001507 sec)
-   passed  21/91  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000044 sec)
-Layout: tiled
-   passed  22/91  mux-eight-pane-grid-follows-numbers-after-split-and-meta-five (0.022513 sec)
-long-session-for-width-testing:1 — SYNC:8 [P1,P2,P3,P4,P5,P6,P7,P8]
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  23/91  mux-eight-panes-have-compact-single-bars (0.026188 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  24/91  mux-encoder-fallback-does-not-double-broadcast (0.003218 sec)
-   passed  25/91  mux-fast-session-creation-and-later-rename (0.005474 sec)
-   passed  26/91  mux-first-entry-does-not-prompt (0.001589 sec)
-Emacs mode: terminal live, C-b g C-j to exit
-Char mode (M-RET to exit)
-Copy mode: Press any key to exit
-   passed  27/91  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.002805 sec)
-one:1 — SYNC:3 [P1,P2,P3]
-   passed  28/91  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.007118 sec)
-one:1 — SYNC:3 [P1,P2,P3]
-   passed  29/91  mux-hidden-process-death-preserves-zoom-and-local-input (0.018469 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  30/91  mux-interactive-key-command-enters-broadcast-path (0.003568 sec)
-Pane moved to two:2; affected windows SYNC OFF
-   passed  31/91  mux-keyboard-moves-pane-to-new-window-in-other-session (0.005674 sec)
-   passed  32/91  mux-layout-changes-keep-selected-terminal-and-reading-order (0.045856 sec)
-   passed  33/91  mux-layout-cycling-keeps-all-pane-buffers (0.006780 sec)
-   passed  34/91  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000113 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  35/91  mux-literal-prefix-is-encoded-on-each-pane (0.003082 sec)
-Warning (ghostel-mux): Recording stopped for pane shell: Opening output file: No such file or directory, /nonexistent/mux-test/output.log
-   passed  36/91  mux-log-error-is-visible-and-does-not-stop-terminal (0.004320 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  37/91  mux-marker-redisplay-uses-true-input-window-and-preserves-accent (0.003833 sec)
-Layout: tiled
-   passed  38/91  mux-meta-five-retiles-all-panes-even-from-zoom (0.007916 sec)
-Y:1 — SYNC:2 [P1,P2]; selected X:2 stays LOCAL (C-b a: activate its group)
-Layout: tiled
-Active group: X:2 — SYNC OFF (LOCAL)
-   passed  39/91  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.009122 sec)
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  40/91  mux-mouse-word-line-and-clear-keep-copy-mode (0.002565 sec)
-Pane moved to target:2; affected windows SYNC OFF
-   passed  41/91  mux-move-last-pane-to-session-creates-window-without-shell (0.003561 sec)
-   passed  42/91  mux-move-layout-failure-leaves-ownership-and-sync-intact (0.002341 sec)
-Pane moved to two:1; affected windows SYNC OFF
-two:1 — SYNC:2 [P1,P2]
-   passed  43/91  mux-move-pane-reparents-with-live-process-and-log (0.020376 sec)
-Pane moved to one:1; affected windows SYNC OFF
-   passed  44/91  mux-move-pane-same-session-keeps-buffer-number (0.003925 sec)
-   passed  45/91  mux-move-rejects-expired-destination-and-preview (0.001355 sec)
-one:1 — SYNC:2 [P1,P2]
-Window moved to two:2; SYNC OFF
-   passed  46/91  mux-move-window-retains-zoom-processes-and-cleans-old-session (0.006064 sec)
-   passed  47/91  mux-names-do-not-escape-log-directory (0.001973 sec)
-   passed  48/91  mux-native-backend-remains-available-without-recording (0.018274 sec)
-Char mode (M-RET to exit)
-Copy mode: Press any key to exit
-   passed  49/91  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.005182 sec)
-   passed  50/91  mux-number-migration-preserves-identities-and-is-idempotent (0.007091 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  51/91  mux-output-callbacks-and-auto-passwords-remain-local (0.003272 sec)
-one:1 — SYNC:2 [P2,P3]
-   passed  52/91  mux-pane-preview-cancel-restores-hidden-buffer-and-sync-scope (0.006443 sec)
-   passed  53/91  mux-pane-selector-rejects-process-exit-during-preview (0.004004 sec)
-one:1 — SYNC:2 [P1,P2]
-Warning (ghostel-mux): SYNC disabled after partial delivery: ((3 . "write failed"))
-   passed  54/91  mux-partial-delivery-turns-sync-off-without-retrying (0.003804 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  55/91  mux-paste-uses-each-terminal-encoder (0.003584 sec)
-Char mode (M-RET to exit)
-Copy mode: Press any key to exit
-COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  56/91  mux-prefix-and-copy-map-take-priority-in-char-mode (0.002195 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  57/91  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.003316 sec)
-   passed  58/91  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.003526 sec)
-   passed  59/91  mux-preview-cycles-layouts-without-attaching-or-capturing (0.011197 sec)
-   passed  60/91  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.073178 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  61/91  mux-real-keyboard-prefix-and-typing (0.022429 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  62/91  mux-real-terminal-modes-encode-arrow-independently (0.031896 sec)
-   passed  63/91  mux-recording-retains-raw-bytes-and-records-hidden-output (0.021909 sec)
-one:1 — SYNC PAUSED (LOCAL) · 1 visible
-   passed  64/91  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.002079 sec)
-   passed  65/91  mux-rename-minibuffer-accepts-prefix-command-letters (0.002186 sec)
-   passed  66/91  mux-render-uses-real-selection-not-redisplays-temporary-window (0.004240 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  67/91  mux-reorder-layout-failure-is-inert (0.003455 sec)
-one:1 — SYNC:3 [P1,P2,P3]
-   passed  68/91  mux-reordering-renumbers-buffers-without-restarting (0.008821 sec)
-   passed  69/91  mux-session-rename-preserves-unrelated-colliding-buffer (0.001857 sec)
-   passed  70/91  mux-sessions-window-layouts-and-independent-terminals (0.008174 sec)
-   passed  71/91  mux-split-failure-preserves-layout-and-live-panes (0.002091 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  72/91  mux-status-distinguishes-selection-targets-and-local-input (0.005325 sec)
-Pane moved to ordered:1; affected windows SYNC OFF
-   passed  73/91  mux-tiling-follows-tree-order-after-reorder-move-and-exit (0.025484 sec)
-   passed  74/91  mux-tree-drag-outside-rows-is-inert (0.051014 sec)
-   passed  75/91  mux-tree-drag-remembers-pressed-object-across-row-refresh (0.004818 sec)
-Pane moved to two:1; affected windows SYNC OFF
-   passed  76/91  mux-tree-drop-reparents-and-inserts-at-exact-position (0.005624 sec)
-   passed  77/91  mux-tree-exit-of-last-process-removes-empty-session (0.001935 sec)
-   passed  78/91  mux-tree-keyboard-reorder-preview-and-rename (0.006660 sec)
-Pane moved to two:1; affected windows SYNC OFF
-   passed  79/91  mux-tree-move-and-visit-restores-the-full-owning-layout (0.005141 sec)
-
-Pane moved to two:1; affected windows SYNC OFF
-   passed  80/91  mux-tree-move-prompt-accepts-text-and-cancel-is-inert (0.007024 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  81/91  mux-tree-preview-is-read-only-and-restores-sync-layout (0.004795 sec)
-   passed  82/91  mux-tree-preview-process-exit-selects-surviving-row (0.004617 sec)
-Window moved to two:2; SYNC OFF
-   passed  83/91  mux-tree-window-cross-session-insertion-preserves-layout (0.008200 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  84/91  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.004015 sec)
-   passed  85/91  mux-which-key-discovers-both-native-prefixes (0.012772 sec)
-   passed  86/91  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.013581 sec)
-   passed  87/91  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.005520 sec)
-   passed  88/91  mux-window-transfer-layout-failure-is-inert (0.003483 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed  89/91  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.005043 sec)
-   passed  90/91  mux-zoom-navigation-selects-another-live-buffer (0.004326 sec)
-one:1 — SYNC:3 [P1,P2,P3]
-   passed  91/91  mux-zoom-survives-session-switch-and-keeps-sync (0.009309 sec)
-
-Ran 91 tests, 91 results as expected, 0 unexpected (2026-09-14 13:22:14+0200, 0.930627 sec)
-
-Ghostel 0.53.0
-Running 91 tests (2026-09-14 13:22:13+0200, selector ‘t’)
-   passed   1/91  mux-all-session-buffers-remain-in-emacs-and-global-selector (0.013519 sec)
-   passed   2/91  mux-attach-from-tree-cleans-preview-buffer (0.004761 sec)
-   passed   3/91  mux-audit-outlives-scrollback-eviction (0.027903 sec)
-   passed   4/91  mux-auto-tile-defers-while-zoomed (0.006267 sec)
-one:1: AUTO TILE ON
-   passed   5/91  mux-auto-tile-disabled-preserves-explicit-split-direction (0.002813 sec)
-   passed   6/91  mux-auto-tile-hidden-exit-retiled-on-return (0.008560 sec)
-   passed   7/91  mux-auto-tile-reflows-after-exit-and-keeps-manual-sizes-until-change (0.023170 sec)
-one:1 — SYNC:2 [P1,P2]
-   passed   8/91  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.057073 sec)
+   passed    8/110  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.043936 sec)
 one:1 — SYNC:3 [P1,P2,P3]
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed   9/91  mux-broadcast-marker-matches-delivery-and-pauses-with-local-input (0.017230 sec)
-   passed  10/91  mux-buffer-paths-track-session-window-and-pane-positions (0.051169 sec)
-   passed  11/91  mux-closing-pane-cleans-membership-and-renumbers-windows (0.005913 sec)
-   passed  12/91  mux-command-minibuffer-accepts-text-and-followup-prompt (0.002779 sec)
-   passed  13/91  mux-consult-pane-keyboard-selects-buffer-within-zoom (0.022419 sec)
-   passed  14/91  mux-consult-session-selection-and-cancel-restore-ownership (0.007749 sec)
-   passed  15/91  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.012236 sec)
+   passed    9/110  mux-broadcast-marker-matches-delivery-and-pauses-with-local-input (0.019279 sec)
+   passed   10/110  mux-buffer-paths-track-session-window-and-pane-positions (0.012918 sec)
+   passed   11/110  mux-closing-pane-cleans-membership-and-renumbers-windows (0.006201 sec)
+   passed   12/110  mux-command-minibuffer-accepts-text-and-followup-prompt (0.003649 sec)
+   passed   13/110  mux-consult-pane-keyboard-selects-buffer-within-zoom (0.032394 sec)
+   passed   14/110  mux-consult-session-selection-and-cancel-restore-ownership (0.007736 sec)
+   passed   15/110  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.031474 sec)
+   passed   16/110  mux-context-blocked-directory-never-falls-back-to-local (0.000092 sec)
+   passed   17/110  mux-context-protocol-encoding-and-no-local-tramp-confusion (0.000138 sec)
+   passed   18/110  mux-context-protocol-rejects-stale-and-mismatched-records (0.000247 sec)
+Mux context: user@e2b.local — C-j opens Dired
+
+Compilation finished
+   passed   19/110  mux-context-real-compile-and-new-shell-have-own-context (0.098498 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+direct:1 — SYNC:2 [P1,P2]
+   passed   20/110  mux-context-real-direct-pty-input-invalidates-every-sync-target (0.068178 sec)
+Mux context: user@e2b.local — C-j opens Dired
+/tmp
+printf 'ASYNC_OK\n'; pwd: finished.
+   passed   21/110  mux-context-real-dired-key-and-shell-command (0.105263 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   22/110  mux-context-real-killed-buffer-does-not-change-another-buffer (0.035816 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: root@e2b.local — C-j opens Dired
+   passed   23/110  mux-context-real-local-sudo-and-return (0.191094 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed   24/110  mux-context-real-nested-shell-return-and-timeout (0.228698 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   25/110  mux-context-real-preserves-prompt-array-debug-and-vi (0.064252 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   26/110  mux-context-real-preserves-scalar-prompt-debug-and-vi (0.061120 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   27/110  mux-context-real-quit-check-stops-action (0.036260 sec)
+   passed   28/110  mux-context-real-readonly-prompt-fails-closed (0.183288 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   29/110  mux-context-real-shell-directory-and-fresh-reply (0.072921 sec)
+sync-context:1 — SYNC:2 [P1,P2]
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed   30/110  mux-context-real-sync-activation-and-probe-stay-local (0.189132 sec)
+Mux context: root@e2b.local — C-j opens Dired
+root
+/root
+   passed   31/110  mux-context-real-tramp-sudo-dired-and-command (0.256639 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   32/110  mux-context-real-unicode-directory (0.062597 sec)
+, Not a Tramp file name: "/no-such-method:host:"
+   passed   33/110  mux-context-route-preserves-aliases-and-all-hops (0.000131 sec)
+   passed   34/110  mux-context-sudo-user-must-match-explicit-route (0.000044 sec)
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
 Mark set
-   passed  16/91  mux-copy-drag-selection-persists-after-release (0.002078 sec)
+   passed   35/110  mux-copy-drag-selection-persists-after-release (0.001971 sec)
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
 Copy mode: C-b g C-t or C-b g C-j to exit
-   passed  17/91  mux-copy-indicators-follow-actual-input-mode (0.002627 sec)
+   passed   36/110  mux-copy-indicators-follow-actual-input-mode (0.002130 sec)
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  18/91  mux-copy-is-persistent-and-never-deletes-output (0.001863 sec)
-   passed  19/91  mux-destination-selector-keeps-every-candidate (0.005728 sec)
-   passed  20/91  mux-detach-restores-editor-and-keeps-processes (0.001373 sec)
-   passed  21/91  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000044 sec)
+   passed   37/110  mux-copy-is-persistent-and-never-deletes-output (0.001691 sec)
+   passed   38/110  mux-destination-selector-keeps-every-candidate (0.005001 sec)
+   passed   39/110  mux-detach-restores-editor-and-keeps-processes (0.001380 sec)
+   passed   40/110  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000034 sec)
 Layout: tiled
-   passed  22/91  mux-eight-pane-grid-follows-numbers-after-split-and-meta-five (0.026065 sec)
+   passed   41/110  mux-eight-pane-grid-follows-numbers-after-split-and-meta-five (0.019398 sec)
 long-session-for-width-testing:1 — SYNC:8 [P1,P2,P3,P4,P5,P6,P7,P8]
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  23/91  mux-eight-panes-have-compact-single-bars (0.025944 sec)
+   passed   42/110  mux-eight-panes-have-compact-single-bars (0.019968 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  24/91  mux-encoder-fallback-does-not-double-broadcast (0.003618 sec)
-   passed  25/91  mux-fast-session-creation-and-later-rename (0.005722 sec)
-   passed  26/91  mux-first-entry-does-not-prompt (0.001320 sec)
+   passed   43/110  mux-encoder-fallback-does-not-double-broadcast (0.003338 sec)
+   passed   44/110  mux-fast-session-creation-and-later-rename (0.006038 sec)
+   passed   45/110  mux-first-entry-does-not-prompt (0.001449 sec)
 Emacs mode: terminal live, C-b g C-j to exit
 Char mode (M-RET to exit)
 Copy mode: C-b g C-t or C-b g C-j to exit
-   passed  27/91  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.009102 sec)
+   passed   46/110  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.002300 sec)
 one:1 — SYNC:3 [P1,P2,P3]
-   passed  28/91  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.007692 sec)
+   passed   47/110  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.006040 sec)
 one:1 — SYNC:3 [P1,P2,P3]
-   passed  29/91  mux-hidden-process-death-preserves-zoom-and-local-input (0.018667 sec)
+   passed   48/110  mux-hidden-process-death-preserves-zoom-and-local-input (0.018451 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  30/91  mux-interactive-key-command-enters-broadcast-path (0.004461 sec)
+   passed   49/110  mux-interactive-key-command-enters-broadcast-path (0.002924 sec)
 Pane moved to two:2; affected windows SYNC OFF
-   passed  31/91  mux-keyboard-moves-pane-to-new-window-in-other-session (0.005198 sec)
-   passed  32/91  mux-layout-changes-keep-selected-terminal-and-reading-order (0.014059 sec)
-   passed  33/91  mux-layout-cycling-keeps-all-pane-buffers (0.041642 sec)
-   passed  34/91  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000088 sec)
+   passed   50/110  mux-keyboard-moves-pane-to-new-window-in-other-session (0.004079 sec)
+   passed   51/110  mux-layout-changes-keep-selected-terminal-and-reading-order (0.010973 sec)
+   passed   52/110  mux-layout-cycling-keeps-all-pane-buffers (0.005812 sec)
+   passed   53/110  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000074 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  35/91  mux-literal-prefix-is-encoded-on-each-pane (0.003458 sec)
+   passed   54/110  mux-literal-prefix-is-encoded-on-each-pane (0.002919 sec)
 Warning (ghostel-mux): Recording stopped for pane shell: Opening output file: No such file or directory, /nonexistent/mux-test/output.log
-   passed  36/91  mux-log-error-is-visible-and-does-not-stop-terminal (0.005523 sec)
+   passed   55/110  mux-log-error-is-visible-and-does-not-stop-terminal (0.002625 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  37/91  mux-marker-redisplay-uses-true-input-window-and-preserves-accent (0.004205 sec)
+   passed   56/110  mux-marker-redisplay-uses-true-input-window-and-preserves-accent (0.002996 sec)
 Layout: tiled
-   passed  38/91  mux-meta-five-retiles-all-panes-even-from-zoom (0.009017 sec)
+   passed   57/110  mux-meta-five-retiles-all-panes-even-from-zoom (0.008898 sec)
 Y:1 — SYNC:2 [P1,P2]; selected X:2 stays LOCAL (C-b a: activate its group)
 Layout: tiled
 Active group: X:2 — SYNC OFF (LOCAL)
-   passed  39/91  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.011959 sec)
+   passed   58/110  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.010218 sec)
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  40/91  mux-mouse-word-line-and-clear-keep-copy-mode (0.002288 sec)
+   passed   59/110  mux-mouse-word-line-and-clear-keep-copy-mode (0.002046 sec)
 Pane moved to target:2; affected windows SYNC OFF
-   passed  41/91  mux-move-last-pane-to-session-creates-window-without-shell (0.003029 sec)
-   passed  42/91  mux-move-layout-failure-leaves-ownership-and-sync-intact (0.003155 sec)
+   passed   60/110  mux-move-last-pane-to-session-creates-window-without-shell (0.003395 sec)
+   passed   61/110  mux-move-layout-failure-leaves-ownership-and-sync-intact (0.003150 sec)
 Pane moved to two:1; affected windows SYNC OFF
 two:1 — SYNC:2 [P1,P2]
-   passed  43/91  mux-move-pane-reparents-with-live-process-and-log (0.021024 sec)
+   passed   62/110  mux-move-pane-reparents-with-live-process-and-log (0.020520 sec)
 Pane moved to one:1; affected windows SYNC OFF
-   passed  44/91  mux-move-pane-same-session-keeps-buffer-number (0.004654 sec)
-   passed  45/91  mux-move-rejects-expired-destination-and-preview (0.001317 sec)
+   passed   63/110  mux-move-pane-same-session-keeps-buffer-number (0.004841 sec)
+   passed   64/110  mux-move-rejects-expired-destination-and-preview (0.001884 sec)
 one:1 — SYNC:2 [P1,P2]
 Window moved to two:2; SYNC OFF
-   passed  46/91  mux-move-window-retains-zoom-processes-and-cleans-old-session (0.005140 sec)
-   passed  47/91  mux-names-do-not-escape-log-directory (0.001396 sec)
-   passed  48/91  mux-native-backend-remains-available-without-recording (0.014789 sec)
+   passed   65/110  mux-move-window-retains-zoom-processes-and-cleans-old-session (0.005533 sec)
+   passed   66/110  mux-names-do-not-escape-log-directory (0.001659 sec)
+   passed   67/110  mux-native-backend-remains-available-without-recording (0.017761 sec)
 Char mode (M-RET to exit)
 Copy mode: C-b g C-t or C-b g C-j to exit
-   passed  49/91  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.004852 sec)
-   passed  50/91  mux-number-migration-preserves-identities-and-is-idempotent (0.007775 sec)
+   passed   68/110  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.003040 sec)
+   passed   69/110  mux-number-migration-preserves-identities-and-is-idempotent (0.006688 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  51/91  mux-output-callbacks-and-auto-passwords-remain-local (0.003393 sec)
+   passed   70/110  mux-output-callbacks-and-auto-passwords-remain-local (0.003461 sec)
 one:1 — SYNC:2 [P2,P3]
-   passed  52/91  mux-pane-preview-cancel-restores-hidden-buffer-and-sync-scope (0.006889 sec)
-   passed  53/91  mux-pane-selector-rejects-process-exit-during-preview (0.003575 sec)
+   passed   71/110  mux-pane-preview-cancel-restores-hidden-buffer-and-sync-scope (0.006115 sec)
+   passed   72/110  mux-pane-selector-rejects-process-exit-during-preview (0.003579 sec)
 one:1 — SYNC:2 [P1,P2]
 Warning (ghostel-mux): SYNC disabled after partial delivery: ((3 . "write failed"))
-   passed  54/91  mux-partial-delivery-turns-sync-off-without-retrying (0.003383 sec)
+   passed   73/110  mux-partial-delivery-turns-sync-off-without-retrying (0.003252 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  55/91  mux-paste-uses-each-terminal-encoder (0.007590 sec)
+   passed   74/110  mux-paste-uses-each-terminal-encoder (0.006461 sec)
 Char mode (M-RET to exit)
 Copy mode: C-b g C-t or C-b g C-j to exit
 COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
-   passed  56/91  mux-prefix-and-copy-map-take-priority-in-char-mode (0.003135 sec)
+   passed   75/110  mux-prefix-and-copy-map-take-priority-in-char-mode (0.002376 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  57/91  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.003730 sec)
-   passed  58/91  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.003300 sec)
-   passed  59/91  mux-preview-cycles-layouts-without-attaching-or-capturing (0.010657 sec)
-   passed  60/91  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.069986 sec)
+   passed   76/110  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.004200 sec)
+   passed   77/110  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.003484 sec)
+   passed   78/110  mux-preview-cycles-layouts-without-attaching-or-capturing (0.008998 sec)
+   passed   79/110  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.088557 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  61/91  mux-real-keyboard-prefix-and-typing (0.022624 sec)
+   passed   80/110  mux-real-keyboard-prefix-and-typing (0.028074 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  62/91  mux-real-terminal-modes-encode-arrow-independently (0.037014 sec)
-   passed  63/91  mux-recording-retains-raw-bytes-and-records-hidden-output (0.017544 sec)
+   passed   81/110  mux-real-terminal-modes-encode-arrow-independently (0.071294 sec)
+   passed   82/110  mux-recording-retains-raw-bytes-and-records-hidden-output (0.018656 sec)
 one:1 — SYNC PAUSED (LOCAL) · 1 visible
-   passed  64/91  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.002480 sec)
-   passed  65/91  mux-rename-minibuffer-accepts-prefix-command-letters (0.002947 sec)
-   passed  66/91  mux-render-uses-real-selection-not-redisplays-temporary-window (0.004464 sec)
+   passed   83/110  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.001662 sec)
+   passed   84/110  mux-rename-minibuffer-accepts-prefix-command-letters (0.002146 sec)
+   passed   85/110  mux-render-uses-real-selection-not-redisplays-temporary-window (0.003678 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  67/91  mux-reorder-layout-failure-is-inert (0.004427 sec)
+   passed   86/110  mux-reorder-layout-failure-is-inert (0.003976 sec)
 one:1 — SYNC:3 [P1,P2,P3]
-   passed  68/91  mux-reordering-renumbers-buffers-without-restarting (0.010496 sec)
-   passed  69/91  mux-session-rename-preserves-unrelated-colliding-buffer (0.002063 sec)
-   passed  70/91  mux-sessions-window-layouts-and-independent-terminals (0.008539 sec)
-   passed  71/91  mux-split-failure-preserves-layout-and-live-panes (0.002031 sec)
+   passed   87/110  mux-reordering-renumbers-buffers-without-restarting (0.007166 sec)
+   passed   88/110  mux-session-rename-preserves-unrelated-colliding-buffer (0.001657 sec)
+   passed   89/110  mux-sessions-window-layouts-and-independent-terminals (0.006186 sec)
+   passed   90/110  mux-split-failure-preserves-layout-and-live-panes (0.001735 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  72/91  mux-status-distinguishes-selection-targets-and-local-input (0.005417 sec)
+   passed   91/110  mux-status-distinguishes-selection-targets-and-local-input (0.003733 sec)
 Pane moved to ordered:1; affected windows SYNC OFF
-   passed  73/91  mux-tiling-follows-tree-order-after-reorder-move-and-exit (0.025361 sec)
-   passed  74/91  mux-tree-drag-outside-rows-is-inert (0.004804 sec)
-   passed  75/91  mux-tree-drag-remembers-pressed-object-across-row-refresh (0.052355 sec)
+   passed   92/110  mux-tiling-follows-tree-order-after-reorder-move-and-exit (0.019381 sec)
+   passed   93/110  mux-tree-drag-outside-rows-is-inert (0.003818 sec)
+   passed   94/110  mux-tree-drag-remembers-pressed-object-across-row-refresh (0.004193 sec)
 Pane moved to two:1; affected windows SYNC OFF
-   passed  76/91  mux-tree-drop-reparents-and-inserts-at-exact-position (0.006908 sec)
-   passed  77/91  mux-tree-exit-of-last-process-removes-empty-session (0.002329 sec)
-   passed  78/91  mux-tree-keyboard-reorder-preview-and-rename (0.007616 sec)
+   passed   95/110  mux-tree-drop-reparents-and-inserts-at-exact-position (0.005568 sec)
+   passed   96/110  mux-tree-exit-of-last-process-removes-empty-session (0.001883 sec)
+   passed   97/110  mux-tree-keyboard-reorder-preview-and-rename (0.005185 sec)
 Pane moved to two:1; affected windows SYNC OFF
-   passed  79/91  mux-tree-move-and-visit-restores-the-full-owning-layout (0.005396 sec)
+   passed   98/110  mux-tree-move-and-visit-restores-the-full-owning-layout (0.004021 sec)
 
 Pane moved to two:1; affected windows SYNC OFF
-   passed  80/91  mux-tree-move-prompt-accepts-text-and-cancel-is-inert (0.006916 sec)
+   passed   99/110  mux-tree-move-prompt-accepts-text-and-cancel-is-inert (0.005024 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  81/91  mux-tree-preview-is-read-only-and-restores-sync-layout (0.004791 sec)
-   passed  82/91  mux-tree-preview-process-exit-selects-surviving-row (0.004679 sec)
+   passed  100/110  mux-tree-preview-is-read-only-and-restores-sync-layout (0.004170 sec)
+   passed  101/110  mux-tree-preview-process-exit-selects-surviving-row (0.003651 sec)
 Window moved to two:2; SYNC OFF
-   passed  83/91  mux-tree-window-cross-session-insertion-preserves-layout (0.008651 sec)
+   passed  102/110  mux-tree-window-cross-session-insertion-preserves-layout (0.006845 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  84/91  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.004467 sec)
-   passed  85/91  mux-which-key-discovers-both-native-prefixes (0.012589 sec)
-   passed  86/91  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.014092 sec)
-   passed  87/91  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.005347 sec)
-   passed  88/91  mux-window-transfer-layout-failure-is-inert (0.003238 sec)
+   passed  103/110  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.003470 sec)
+   passed  104/110  mux-which-key-discovers-both-native-prefixes (0.005208 sec)
+   passed  105/110  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.011129 sec)
+   passed  106/110  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.004175 sec)
+   passed  107/110  mux-window-transfer-layout-failure-is-inert (0.002960 sec)
 one:1 — SYNC:2 [P1,P2]
-   passed  89/91  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.010883 sec)
-   passed  90/91  mux-zoom-navigation-selects-another-live-buffer (0.003486 sec)
+   passed  108/110  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.007416 sec)
+   passed  109/110  mux-zoom-navigation-selects-another-live-buffer (0.003449 sec)
 one:1 — SYNC:3 [P1,P2,P3]
-   passed  91/91  mux-zoom-survives-session-switch-and-keeps-sync (0.007893 sec)
+   passed  110/110  mux-zoom-survives-session-switch-and-keeps-sync (0.007242 sec)
 
-Ran 91 tests, 91 results as expected, 0 unexpected (2026-09-14 13:22:14+0200, 0.977437 sec)
+Ran 110 tests, 110 results as expected, 0 unexpected (2026-09-14 22:32:50+0000, 2.549237 sec)
 
-Byte compilation, Ghostel 0.53.0, byte-compile-error-on-warn=t: exit 0.
-No compilation warnings. The portable runtime emits a missing system Lisp
-directory warning at startup; its bundled Lisp load-path is available.
+Quit
+Ghostel 0.40 / Bash 5.2 — full suite
+Running 110 tests (2026-09-14 22:33:19+0000, selector `t')
+   passed    1/110  mux-all-session-buffers-remain-in-emacs-and-global-selector (0.009423 sec)
+   passed    2/110  mux-attach-from-tree-cleans-preview-buffer (0.003026 sec)
+   passed    3/110  mux-audit-outlives-scrollback-eviction (0.041366 sec)
+   passed    4/110  mux-auto-tile-defers-while-zoomed (0.005930 sec)
+one:1: AUTO TILE ON
+   passed    5/110  mux-auto-tile-disabled-preserves-explicit-split-direction (0.003225 sec)
+   passed    6/110  mux-auto-tile-hidden-exit-retiled-on-return (0.006688 sec)
+   passed    7/110  mux-auto-tile-reflows-after-exit-and-keeps-manual-sizes-until-change (0.032418 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed    8/110  mux-broadcast-is-visible-only-and-resumes-after-unzoom (0.048076 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed    9/110  mux-broadcast-marker-matches-delivery-and-pauses-with-local-input (0.007257 sec)
+   passed   10/110  mux-buffer-paths-track-session-window-and-pane-positions (0.008708 sec)
+   passed   11/110  mux-closing-pane-cleans-membership-and-renumbers-windows (0.004641 sec)
+   passed   12/110  mux-command-minibuffer-accepts-text-and-followup-prompt (0.002590 sec)
+   passed   13/110  mux-consult-pane-keyboard-selects-buffer-within-zoom (0.022269 sec)
+   passed   14/110  mux-consult-session-selection-and-cancel-restore-ownership (0.005783 sec)
+   passed   15/110  mux-consult-window-keyboard-selects-exact-window-and-reverse-pane (0.009915 sec)
+   passed   16/110  mux-context-blocked-directory-never-falls-back-to-local (0.000083 sec)
+   passed   17/110  mux-context-protocol-encoding-and-no-local-tramp-confusion (0.000161 sec)
+   passed   18/110  mux-context-protocol-rejects-stale-and-mismatched-records (0.000340 sec)
+Mux context: user@e2b.local — C-j opens Dired
+
+Compilation finished
+   passed   19/110  mux-context-real-compile-and-new-shell-have-own-context (0.094492 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+direct:1 — SYNC:2 [P1,P2]
+   passed   20/110  mux-context-real-direct-pty-input-invalidates-every-sync-target (0.082136 sec)
+Mux context: user@e2b.local — C-j opens Dired
+/tmp
+printf 'ASYNC_OK\n'; pwd: finished.
+   passed   21/110  mux-context-real-dired-key-and-shell-command (0.139680 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   22/110  mux-context-real-killed-buffer-does-not-change-another-buffer (0.035222 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: root@e2b.local — C-j opens Dired
+   passed   23/110  mux-context-real-local-sudo-and-return (0.214282 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed   24/110  mux-context-real-nested-shell-return-and-timeout (0.232129 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   25/110  mux-context-real-preserves-prompt-array-debug-and-vi (0.065549 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   26/110  mux-context-real-preserves-scalar-prompt-debug-and-vi (0.064433 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   27/110  mux-context-real-quit-check-stops-action (0.035084 sec)
+   passed   28/110  mux-context-real-readonly-prompt-fails-closed (0.182114 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   29/110  mux-context-real-shell-directory-and-fresh-reply (0.071106 sec)
+sync-context:1 — SYNC:2 [P1,P2]
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed   30/110  mux-context-real-sync-activation-and-probe-stay-local (0.190721 sec)
+Mux context: root@e2b.local — C-j opens Dired
+root
+/root
+   passed   31/110  mux-context-real-tramp-sudo-dired-and-command (0.251679 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   32/110  mux-context-real-unicode-directory (0.061395 sec)
+, Not a Tramp file name: "/no-such-method:host:"
+   passed   33/110  mux-context-route-preserves-aliases-and-all-hops (0.000140 sec)
+   passed   34/110  mux-context-sudo-user-must-match-explicit-route (0.000103 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Mark set
+   passed   35/110  mux-copy-drag-selection-persists-after-release (0.001656 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+Copy mode: Press any key to exit
+   passed   36/110  mux-copy-indicators-follow-actual-input-mode (0.001997 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed   37/110  mux-copy-is-persistent-and-never-deletes-output (0.001554 sec)
+   passed   38/110  mux-destination-selector-keeps-every-candidate (0.034167 sec)
+   passed   39/110  mux-detach-restores-editor-and-keeps-processes (0.001430 sec)
+   passed   40/110  mux-direct-writes-preserve-explicit-terminal-when-not-broadcasting (0.000037 sec)
+Layout: tiled
+   passed   41/110  mux-eight-pane-grid-follows-numbers-after-split-and-meta-five (0.016702 sec)
+long-session-for-width-testing:1 — SYNC:8 [P1,P2,P3,P4,P5,P6,P7,P8]
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed   42/110  mux-eight-panes-have-compact-single-bars (0.016416 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   43/110  mux-encoder-fallback-does-not-double-broadcast (0.002768 sec)
+   passed   44/110  mux-fast-session-creation-and-later-rename (0.004548 sec)
+   passed   45/110  mux-first-entry-does-not-prompt (0.001323 sec)
+Emacs mode: terminal live, C-b g C-j to exit
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+   passed   46/110  mux-ghostel-prefix-mode-switches-and-shares-user-bindings (0.002003 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed   47/110  mux-hidden-and-foreign-buffers-never-join-visible-broadcast (0.005461 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed   48/110  mux-hidden-process-death-preserves-zoom-and-local-input (0.018398 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   49/110  mux-interactive-key-command-enters-broadcast-path (0.003000 sec)
+Pane moved to two:2; affected windows SYNC OFF
+   passed   50/110  mux-keyboard-moves-pane-to-new-window-in-other-session (0.003513 sec)
+   passed   51/110  mux-layout-changes-keep-selected-terminal-and-reading-order (0.010371 sec)
+   passed   52/110  mux-layout-cycling-keeps-all-pane-buffers (0.004901 sec)
+   passed   53/110  mux-legacy-creation-forces-fresh-buffer-and-restores-display (0.000072 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   54/110  mux-literal-prefix-is-encoded-on-each-pane (0.002513 sec)
+Warning (ghostel-mux): Recording stopped for pane shell: Opening output file: No such file or directory, /nonexistent/mux-test/output.log
+   passed   55/110  mux-log-error-is-visible-and-does-not-stop-terminal (0.002559 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   56/110  mux-marker-redisplay-uses-true-input-window-and-preserves-accent (0.002537 sec)
+Layout: tiled
+   passed   57/110  mux-meta-five-retiles-all-panes-even-from-zoom (0.006738 sec)
+Y:1 — SYNC:2 [P1,P2]; selected X:2 stays LOCAL (C-b a: activate its group)
+Layout: tiled
+Active group: X:2 — SYNC OFF (LOCAL)
+   passed   58/110  mux-mixed-view-reports-scope-and-explicit-attach-switches-owner (0.007377 sec)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed   59/110  mux-mouse-word-line-and-clear-keep-copy-mode (0.002014 sec)
+Pane moved to target:2; affected windows SYNC OFF
+   passed   60/110  mux-move-last-pane-to-session-creates-window-without-shell (0.002606 sec)
+   passed   61/110  mux-move-layout-failure-leaves-ownership-and-sync-intact (0.002278 sec)
+Pane moved to two:1; affected windows SYNC OFF
+two:1 — SYNC:2 [P1,P2]
+   passed   62/110  mux-move-pane-reparents-with-live-process-and-log (0.017870 sec)
+Pane moved to one:1; affected windows SYNC OFF
+   passed   63/110  mux-move-pane-same-session-keeps-buffer-number (0.002658 sec)
+   passed   64/110  mux-move-rejects-expired-destination-and-preview (0.001321 sec)
+one:1 — SYNC:2 [P1,P2]
+Window moved to two:2; SYNC OFF
+   passed   65/110  mux-move-window-retains-zoom-processes-and-cleans-old-session (0.004137 sec)
+   passed   66/110  mux-names-do-not-escape-log-directory (0.001456 sec)
+   passed   67/110  mux-native-backend-remains-available-without-recording (0.019501 sec)
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+   passed   68/110  mux-native-prefix-exposes-full-key-sequences-to-emacs (0.002517 sec)
+   passed   69/110  mux-number-migration-preserves-identities-and-is-idempotent (0.005740 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   70/110  mux-output-callbacks-and-auto-passwords-remain-local (0.002966 sec)
+one:1 — SYNC:2 [P2,P3]
+   passed   71/110  mux-pane-preview-cancel-restores-hidden-buffer-and-sync-scope (0.005622 sec)
+   passed   72/110  mux-pane-selector-rejects-process-exit-during-preview (0.003434 sec)
+one:1 — SYNC:2 [P1,P2]
+Warning (ghostel-mux): SYNC disabled after partial delivery: ((3 . "write failed"))
+   passed   73/110  mux-partial-delivery-turns-sync-off-without-retrying (0.003070 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   74/110  mux-paste-uses-each-terminal-encoder (0.003045 sec)
+Char mode (M-RET to exit)
+Copy mode: Press any key to exit
+COPY MODE — M-w copy/stay · C-w copy/exit · q return to terminal
+   passed   75/110  mux-prefix-and-copy-map-take-priority-in-char-mode (0.001754 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   76/110  mux-preview-blocks-terminal-input-and-defers-process-reconcile (0.003215 sec)
+   passed   77/110  mux-preview-cancel-after-origin-dies-restores-emacs-workspace (0.002955 sec)
+   passed   78/110  mux-preview-cycles-layouts-without-attaching-or-capturing (0.008403 sec)
+   passed   79/110  mux-process-exit-closes-pane-and-last-session-on-both-backends (0.085315 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   80/110  mux-real-keyboard-prefix-and-typing (0.017576 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   81/110  mux-real-terminal-modes-encode-arrow-independently (0.030666 sec)
+   passed   82/110  mux-recording-retains-raw-bytes-and-records-hidden-output (0.017755 sec)
+one:1 — SYNC PAUSED (LOCAL) · 1 visible
+   passed   83/110  mux-refresh-removes-legacy-colors-preserving-user-remaps (0.001420 sec)
+   passed   84/110  mux-rename-minibuffer-accepts-prefix-command-letters (0.001613 sec)
+   passed   85/110  mux-render-uses-real-selection-not-redisplays-temporary-window (0.002684 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   86/110  mux-reorder-layout-failure-is-inert (0.002740 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed   87/110  mux-reordering-renumbers-buffers-without-restarting (0.006132 sec)
+   passed   88/110  mux-session-rename-preserves-unrelated-colliding-buffer (0.001387 sec)
+   passed   89/110  mux-sessions-window-layouts-and-independent-terminals (0.005419 sec)
+   passed   90/110  mux-split-failure-preserves-layout-and-live-panes (0.001340 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed   91/110  mux-status-distinguishes-selection-targets-and-local-input (0.003415 sec)
+Pane moved to ordered:1; affected windows SYNC OFF
+   passed   92/110  mux-tiling-follows-tree-order-after-reorder-move-and-exit (0.046904 sec)
+   passed   93/110  mux-tree-drag-outside-rows-is-inert (0.002763 sec)
+   passed   94/110  mux-tree-drag-remembers-pressed-object-across-row-refresh (0.002814 sec)
+Pane moved to two:1; affected windows SYNC OFF
+   passed   95/110  mux-tree-drop-reparents-and-inserts-at-exact-position (0.004622 sec)
+   passed   96/110  mux-tree-exit-of-last-process-removes-empty-session (0.001956 sec)
+   passed   97/110  mux-tree-keyboard-reorder-preview-and-rename (0.005485 sec)
+Pane moved to two:1; affected windows SYNC OFF
+   passed   98/110  mux-tree-move-and-visit-restores-the-full-owning-layout (0.003090 sec)
+
+Pane moved to two:1; affected windows SYNC OFF
+   passed   99/110  mux-tree-move-prompt-accepts-text-and-cancel-is-inert (0.003571 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  100/110  mux-tree-preview-is-read-only-and-restores-sync-layout (0.002629 sec)
+   passed  101/110  mux-tree-preview-process-exit-selects-surviving-row (0.002486 sec)
+Window moved to two:2; SYNC OFF
+   passed  102/110  mux-tree-window-cross-session-insertion-preserves-layout (0.004721 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  103/110  mux-visible-broadcast-deduplicates-and-rechecks-targets (0.002450 sec)
+   passed  104/110  mux-which-key-discovers-both-native-prefixes (0.003896 sec)
+   passed  105/110  mux-window-preview-cancel-keeps-origin-and-saved-window-selection (0.007879 sec)
+   passed  106/110  mux-window-selector-rejects-exited-candidate-and-supports-fallback (0.002989 sec)
+   passed  107/110  mux-window-transfer-layout-failure-is-inert (0.002568 sec)
+one:1 — SYNC:2 [P1,P2]
+   passed  108/110  mux-zoom-keyboard-control-and-paste-target-only-visible-pane (0.003340 sec)
+   passed  109/110  mux-zoom-navigation-selects-another-live-buffer (0.002983 sec)
+one:1 — SYNC:3 [P1,P2,P3]
+   passed  110/110  mux-zoom-survives-session-switch-and-keeps-sync (0.005885 sec)
+
+Ran 110 tests, 110 results as expected, 0 unexpected (2026-09-14 22:33:21+0000, 2.476960 sec)
+
+Quit
+Ghostel 0.53 / Bash 4.2 — context selection, excluding array PROMPT_COMMAND
+Running 18 tests (2026-09-14 22:33:22+0000, selector `(and "^mux-context-" (not mux-context-real-preserves-prompt-array-debug-and-vi))')
+   passed   1/18  mux-context-blocked-directory-never-falls-back-to-local (0.000116 sec)
+   passed   2/18  mux-context-protocol-encoding-and-no-local-tramp-confusion (0.000204 sec)
+   passed   3/18  mux-context-protocol-rejects-stale-and-mismatched-records (0.000320 sec)
+Mux context: user@e2b.local — C-j opens Dired
+
+Compilation finished
+   passed   4/18  mux-context-real-compile-and-new-shell-have-own-context (0.144002 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+direct:1 — SYNC:2 [P1,P2]
+   passed   5/18  mux-context-real-direct-pty-input-invalidates-every-sync-target (0.179891 sec)
+Mux context: user@e2b.local — C-j opens Dired
+/tmp
+printf 'ASYNC_OK\n'; pwd: finished.
+   passed   6/18  mux-context-real-dired-key-and-shell-command (0.176490 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed   7/18  mux-context-real-killed-buffer-does-not-change-another-buffer (0.084177 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: root@e2b.local — C-j opens Dired
+   passed   8/18  mux-context-real-local-sudo-and-return (0.211026 sec)
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed   9/18  mux-context-real-nested-shell-return-and-timeout (0.292048 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed  10/18  mux-context-real-preserves-scalar-prompt-debug-and-vi (0.126270 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed  11/18  mux-context-real-quit-check-stops-action (0.119159 sec)
+   passed  12/18  mux-context-real-readonly-prompt-fails-closed (0.168149 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed  13/18  mux-context-real-shell-directory-and-fresh-reply (0.138756 sec)
+sync-context:1 — SYNC:2 [P1,P2]
+Mux context: user@e2b.local — C-j opens Dired
+Mux context: user@e2b.local — C-j opens Dired
+   passed  14/18  mux-context-real-sync-activation-and-probe-stay-local (0.316924 sec)
+Mux context: root@e2b.local — C-j opens Dired
+root
+/root
+   passed  15/18  mux-context-real-tramp-sudo-dired-and-command (0.255332 sec)
+Mux context: user@e2b.local — C-j opens Dired
+   passed  16/18  mux-context-real-unicode-directory (0.165968 sec)
+, Not a Tramp file name: "/no-such-method:host:"
+   passed  17/18  mux-context-route-preserves-aliases-and-all-hops (0.000174 sec)
+   passed  18/18  mux-context-sudo-user-must-match-explicit-route (0.000055 sec)
+
+Ran 18 tests, 18 results as expected, 0 unexpected (2026-09-14 22:33:25+0000, 2.380290 sec)
+
+
+Byte compilation (warnings as errors): success, no warnings.
+Bash 4.2 and 5.2 syntax checks: success.

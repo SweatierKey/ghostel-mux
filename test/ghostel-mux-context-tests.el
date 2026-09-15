@@ -1,0 +1,357 @@
+;;; ghostel-mux-context-tests.el --- Context integration -*- lexical-binding: t; -*-
+(require 'ghostel-mux-context)
+(ert-deftest mux-context-real-shell-directory-and-fresh-reply ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "context")
+    (let ((p ghostel-mux--pane))
+      (ghostel-mux-test--send "printf 'READY_%s\\n' CONTEXT\n")
+      (ghostel-mux-test--wait (lambda () (string-match-p "READY_CONTEXT" (ghostel-mux-test--text p))))
+      (condition-case err
+          (progn
+            (ghostel-mux-context-enable "")
+            (should (eq 'ready ghostel-mux-context--state))
+            (should (equal (file-name-unquote (ghostel-mux-context--verify)) "/tmp/"))
+            (ghostel-mux-test--send "cd /usr/bin\n")
+            (should (eq 'pending ghostel-mux-context--state))
+            (ghostel-mux-test--wait (lambda () (eq 'ready ghostel-mux-context--state)))
+            (should (equal (file-name-unquote (ghostel-mux-context--verify)) "/usr/bin/")))
+        (error (princ (format "\nSTATE %S ERROR %S\nTERM:\n%s\n" ghostel-mux-context--state ghostel-mux-context--error (ghostel-mux-test--text p)))
+               (signal (car err) (cdr err)))))))
+
+(defun mux-context-test--ready ()
+  (ghostel-mux-test--send "printf 'READY_%s\\n' CONTEXT\n")
+  (let ((p ghostel-mux--pane))
+    (ghostel-mux-test--wait
+     (lambda () (string-match-p "READY_CONTEXT" (ghostel-mux-test--text p))))))
+(defun mux-context-test--prompt ()
+  (ghostel-mux-test--wait (lambda () (eq ghostel-mux-context--state 'ready))))
+(defun mux-context-test--hex (s)
+  (mapconcat (lambda (c) (format "%02x" c)) (encode-coding-string s 'utf-8-unix) ""))
+(defun mux-context-test--report (token seq &optional kind nonce cwd user uid pid)
+  (apply #'ghostel-mux-context--receive
+         (mapcar #'mux-context-test--hex
+                 (list "1" (or kind "prompt") token (number-to-string seq) (or nonce "")
+                       (system-name) (or user (user-login-name)) (or uid (number-to-string (user-uid)))
+                       (or pid "42") (or cwd "/tmp")))))
+(ert-deftest mux-context-route-preserves-aliases-and-all-hops ()
+  (let ((tramp-default-proxies-alist (copy-tree tramp-default-proxies-alist)))
+    (let ((before (copy-tree tramp-default-proxies-alist)))
+      (dolist (route '("/ssh:server1:" "/ssh:server1|sudo:oracle@server1:"
+                       "/ssh:bridge|ssh:server1|sudo:oracle@:"
+                       "/ssh:encoded%user@psmp#2222|ssh:server1:"))
+        (should (equal route (ghostel-mux-context--route (concat route "/usr/bin")))))
+      (should (equal before tramp-default-proxies-alist))))
+  (should (equal "" (ghostel-mux-context--route "")))
+  (should-error (ghostel-mux-context--route "/no-such-method:host:")))
+
+(ert-deftest mux-context-protocol-rejects-stale-and-mismatched-records ()
+  (with-temp-buffer
+    (let ((ghostel-mux--pane t) (ghostel-mux-context-mode t)
+          (ghostel-mux-context--records (make-hash-table :test #'equal)))
+      (puthash "a" '(:route "" :key "123" :seq 0) ghostel-mux-context--records)
+      (mux-context-test--report "a" 1)
+      (should (eq ghostel-mux-context--state 'ready))
+      (ghostel-mux-context--block)
+      (mux-context-test--report "a" 1)
+      (mux-context-test--report "unknown" 20)
+      (should (eq ghostel-mux-context--state 'pending))
+      (let ((ghostel-mux-context--request '("a" . "fresh"))
+            (ghostel-mux-context--response nil))
+        (mux-context-test--report "a" 2 "reply" "old")
+        (should-not ghostel-mux-context--response)
+        (mux-context-test--report "a" 2 "reply" "fresh")
+        (should (equal "/tmp/" (file-name-unquote ghostel-mux-context--response))))
+      (mux-context-test--report "a" 3 nil nil nil nil nil "43")
+      (should (eq ghostel-mux-context--state 'pending))
+      (should (string-match-p "identity changed" ghostel-mux-context--error)))))
+
+(ert-deftest mux-context-protocol-encoding-and-no-local-tramp-confusion ()
+  (with-temp-buffer
+    (let ((ghostel-mux--pane t) (ghostel-mux-context-mode t)
+          (ghostel-mux-context--records (make-hash-table :test #'equal)))
+      (puthash "a" '(:route "" :key "123" :seq 0) ghostel-mux-context--records)
+      (let ((path "/ssh:fake:/è space ' \" \\ \n"))
+        (mux-context-test--report "a" 1 nil nil path)
+        (should (equal (concat path "/") (file-name-unquote default-directory)))
+        (should-not (file-remote-p default-directory)))
+      (ghostel-mux-context--receive "zz")
+      (should (eq ghostel-mux-context--state 'pending)))))
+
+(ert-deftest mux-context-blocked-directory-never-falls-back-to-local ()
+  (with-temp-buffer
+    (ghostel-mux-context--block)
+    (should (file-remote-p default-directory))
+    (should-error (file-exists-p (expand-file-name "file")) :type 'user-error)
+    (should-error (process-file "/bin/true") :type 'user-error)))
+
+(ert-deftest mux-context-sudo-user-must-match-explicit-route ()
+  (should-error
+   (ghostel-mux-context--check '(:route "/ssh:server1|sudo:oracle@server1:")
+                               "server1" "root" "0" "12" "/root"))
+  (should-not
+   (ghostel-mux-context--check '(:route "/ssh:server1|sudo:oracle@server1:")
+                               "server1" "oracle" "1001" "12" "/home/oracle")))
+
+(ert-deftest mux-context-real-nested-shell-return-and-timeout ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "nested")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((parent ghostel-mux-context--current) (p ghostel-mux--pane))
+      (ghostel-mux-test--send "bash --noprofile --norc\n")
+      (ghostel-mux-test--send "printf 'CHILD_%s\\n' READY\n")
+      (ghostel-mux-test--wait (lambda () (string-match-p "CHILD_READY" (ghostel-mux-test--text p))))
+      (should (eq ghostel-mux-context--state 'pending))
+      (should-error (ghostel-mux-context--verify) :type 'user-error)
+      (setq ghostel-mux-context--state 'ready)
+      (let ((ghostel-mux-context-timeout 0.1))
+        (should-error (ghostel-mux-context--verify) :type 'user-error))
+      (should (eq ghostel-mux-context--state 'pending))
+      (ghostel-mux-test--send "\C-u")
+      (ghostel-mux-context-enable "")
+      (should-not (equal parent ghostel-mux-context--current))
+      (ghostel-mux-test--send "cd /usr/bin\n")
+      (mux-context-test--prompt)
+      (should (equal "/usr/bin/" (file-name-unquote (ghostel-mux-context--verify))))
+      (ghostel-mux-test--send "exit\n")
+      (mux-context-test--prompt)
+      (should (equal parent ghostel-mux-context--current))
+      (should (equal "/tmp/" (file-name-unquote (ghostel-mux-context--verify)))))))
+
+(ert-deftest mux-context-real-sync-activation-and-probe-stay-local ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "sync-context")
+    (mux-context-test--ready)
+    (let ((first (current-buffer)))
+      (ghostel-mux-split-right)
+      (mux-context-test--ready)
+      (ghostel-mux-toggle-sync)
+      (ghostel-mux-context-enable "")
+      (should-not (buffer-local-value 'ghostel-mux-context-mode first))
+      (should-not (string-match-p "__gmx_context_install" (ghostel-mux-test--text
+                                                         (buffer-local-value 'ghostel-mux--pane first))))
+      (let* ((second (current-buffer))
+             (p1 (buffer-local-value 'ghostel-mux--pane first))
+             (p2 ghostel-mux--pane)
+             (before (ghostel-mux-test--text p1)))
+        (ghostel-mux-context--verify)
+        (accept-process-output nil 0.05)
+        (should (equal before (ghostel-mux-test--text p1)))
+        (select-window (get-buffer-window first))
+        (ghostel-mux-context-enable "")
+        (ghostel-mux-test--send "cd /usr/bin\n")
+        (dolist (buf (list first second))
+          (should (eq 'pending (buffer-local-value 'ghostel-mux-context--state buf))))
+        (dolist (buf (list first second))
+          (with-current-buffer buf
+            (mux-context-test--prompt)
+            (should (equal "/usr/bin/" (file-name-unquote (ghostel-mux-context--verify))))))
+        (ghostel-mux-zoom)
+        (ghostel-mux-test--send "cd /tmp\n")
+        (mux-context-test--prompt)
+        (should (equal "/tmp/" (file-name-unquote (ghostel-mux-context--verify))))
+        (with-current-buffer second
+          (should (equal "/usr/bin/" (file-name-unquote default-directory))))
+        (should (ghostel-mux--pane-live-p p2))))))
+
+(ert-deftest mux-context-real-dired-key-and-shell-command ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "actions")
+    (mux-context-test--ready)
+    (should-not (eq (key-binding (kbd "C-j")) #'ghostel-mux-context-dired))
+    (ghostel-mux-context-enable "")
+    (should (eq (key-binding (kbd "C-j")) #'ghostel-mux-context-dired))
+    (let ((origin (current-buffer)) output)
+      (setq output (generate-new-buffer " *mux-context-output*"))
+      (unwind-protect
+          (progn
+            (should (= 0 (shell-command "pwd" output)))
+            (with-current-buffer output
+              (should (equal "/tmp\n" (buffer-string)))
+              (erase-buffer))
+            (async-shell-command "printf 'ASYNC_OK\\n'; pwd" output)
+            (ghostel-mux-test--wait
+             (lambda () (with-current-buffer output
+                          (string-match-p "ASYNC_OK\n/tmp\n" (buffer-string)))))
+            (switch-to-buffer origin)
+            (ghostel-mux-context-dired)
+            (should (derived-mode-p 'dired-mode))
+            (should (equal "/tmp/" (file-name-unquote default-directory)))
+            (let ((dired-buffer (current-buffer)))
+              (switch-to-buffer origin)
+              (kill-buffer dired-buffer)))
+        (kill-buffer output)))))
+
+(ert-deftest mux-context-real-quit-check-stops-action ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "cancel")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let (ran)
+      (cl-letf (((symbol-function 'ghostel-mux-context--send) (lambda (_) (signal 'quit nil))))
+        (condition-case nil
+            (ghostel-mux-context--command-advice (lambda () (setq ran t)))
+          (quit nil)))
+      (should-not ran)
+      (should (eq ghostel-mux-context--state 'pending)))))
+
+(ert-deftest mux-context-real-preserves-prompt-array-debug-and-vi ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "prompt")
+    (mux-context-test--ready)
+    (ghostel-mux-test--send
+     "set -o vi; PROMPT_COMMAND=('__test_count=$((__test_count+1))' ':'); trap ':' DEBUG\n")
+    (let ((p ghostel-mux--pane))
+      (ghostel-mux-context-enable "")
+      (ghostel-mux-context--verify)
+      (ghostel-mux-test--send
+       "printf 'PRESERVED_%s_%s\\n' \"${PROMPT_COMMAND[1]}\" \"$__test_count\"; trap -p DEBUG\n")
+      (mux-context-test--prompt)
+      (should (string-match-p "PRESERVED_:_" (ghostel-mux-test--text p)))
+      (should (string-match-p "trap -- ':' DEBUG" (ghostel-mux-test--text p))))))
+
+(ert-deftest mux-context-real-local-sudo-and-return ()
+  (skip-unless (and (executable-find "sudo") (/= (user-uid) 0)
+                    (= 0 (call-process "sudo" nil nil nil "-n" "true"))))
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "sudo")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((parent ghostel-mux-context--current) (p ghostel-mux--pane))
+      (ghostel-mux-test--send "sudo -n -iu root\n")
+      (ghostel-mux-test--send "printf 'SUDO_%s\\n' READY\n")
+      (ghostel-mux-test--wait (lambda () (string-match-p "SUDO_READY" (ghostel-mux-test--text p))))
+      (ghostel-mux-context-enable "/sudo:root@localhost:")
+      (should (equal "/sudo:root@localhost:/root/" (ghostel-mux-context--verify)))
+      (should (equal "root" (nth 1 (plist-get (gethash ghostel-mux-context--current
+                                                     ghostel-mux-context--records) :identity))))
+      (ghostel-mux-test--send "exit\n")
+      (mux-context-test--prompt)
+      (should (equal parent ghostel-mux-context--current))
+      (should (equal "/tmp/" (file-name-unquote (ghostel-mux-context--verify)))))))
+
+(ert-deftest mux-context-real-direct-pty-input-invalidates-every-sync-target ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "direct")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((first (current-buffer)))
+      (ghostel-mux-split-right)
+      (mux-context-test--ready)
+      (ghostel-mux-context-enable "")
+      (ghostel-mux-toggle-sync)
+      (let ((ghostel-mux--input-source (current-buffer)))
+        (ghostel--write-pty ghostel--term "echo WAIT"))
+      (should (eq ghostel-mux-context--state 'pending))
+      (should (eq (buffer-local-value 'ghostel-mux-context--state first) 'pending)))))
+
+(ert-deftest mux-context-real-compile-and-new-shell-have-own-context ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "commands")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((origin (current-buffer)) compiled shell-buffer)
+      (unwind-protect
+          (progn
+            (setq compiled (compile "pwd"))
+            (ghostel-mux-test--wait
+             (lambda () (not (process-live-p (get-buffer-process compiled)))))
+            (with-current-buffer compiled
+              (should (equal "/tmp/" (file-name-unquote default-directory)))
+              (should (string-match-p "\n/tmp\n" (buffer-string))))
+            (switch-to-buffer origin)
+            (setq shell-buffer (shell))
+            (with-current-buffer shell-buffer
+              (should (equal "/tmp/" (file-name-unquote default-directory))))
+            (switch-to-buffer origin)
+            (should-error (shell shell-buffer) :type 'user-error))
+        (dolist (buf (list compiled shell-buffer))
+          (when (buffer-live-p buf)
+            (when-let ((process (get-buffer-process buf)))
+              (set-process-query-on-exit-flag process nil)
+              (delete-process process))
+            (kill-buffer buf)))))))
+
+(ert-deftest mux-context-real-killed-buffer-does-not-change-another-buffer ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "killed")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((origin (current-buffer)) (other (generate-new-buffer " *context-survivor*")))
+      (unwind-protect
+          (let ((directory (buffer-local-value 'default-directory other)))
+            (cl-letf (((symbol-function 'ghostel-mux-context--send)
+                       (lambda (_)
+                         (kill-buffer origin)
+                         (set-buffer other))))
+              (should-error (ghostel-mux-context--verify) :type 'user-error))
+            (should (equal directory (buffer-local-value 'default-directory other))))
+        (kill-buffer other)))))
+
+(ert-deftest mux-context-real-tramp-sudo-dired-and-command ()
+  (skip-unless (and (executable-find "sudo") (/= (user-uid) 0)
+                    (= 0 (call-process "sudo" nil nil nil "-n" "true"))))
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "tramp-sudo")
+    (mux-context-test--ready)
+    (let ((p ghostel-mux--pane) (origin (current-buffer))
+          (output (generate-new-buffer " *mux-sudo-result*")) directory-buffer)
+      (unwind-protect
+          (progn
+            (ghostel-mux-test--send "sudo -n -iu root\n")
+            (ghostel-mux-test--send "printf 'SUDO_%s\\n' READY\n")
+            (ghostel-mux-test--wait (lambda () (string-match-p "SUDO_READY" (ghostel-mux-test--text p))))
+            (ghostel-mux-context-enable "/sudo:root@localhost:")
+            (should (= 0 (shell-command "id -un; pwd" output)))
+            (with-current-buffer output (should (equal "root\n/root\n" (buffer-string))))
+            (ghostel-mux-context-dired)
+            (setq directory-buffer (current-buffer))
+            (should (derived-mode-p 'dired-mode))
+            (should (equal "/sudo:root@localhost:" (file-remote-p default-directory)))
+            (should (file-equal-p default-directory "/sudo:root@localhost:/root/"))
+            (switch-to-buffer origin))
+        (dolist (buf (list output directory-buffer))
+          (when (buffer-live-p buf) (kill-buffer buf)))))))
+
+(ert-deftest mux-context-real-readonly-prompt-fails-closed ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "readonly")
+    (mux-context-test--ready)
+    (ghostel-mux-test--send "readonly PROMPT_COMMAND=':'\n")
+    (let ((ghostel-mux-context-timeout 0.15))
+      (should-error (ghostel-mux-context-enable "") :type 'user-error))
+    (should (eq ghostel-mux-context--state 'pending))
+    (should-error (ghostel-mux-context--verify) :type 'user-error)))
+
+(ert-deftest mux-context-real-unicode-directory ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "unicode")
+    (mux-context-test--ready)
+    (ghostel-mux-context-enable "")
+    (let ((directory (make-temp-file "/tmp/mux-è ' \" " t)))
+      (unwind-protect
+          (progn
+            (ghostel-mux-test--send
+             (format "cd -- $'%s'\n"
+                     (mapconcat (lambda (byte) (format "\\%03o" byte))
+                                (encode-coding-string directory 'utf-8-unix) "")))
+            (mux-context-test--prompt)
+            (unless (equal (file-name-as-directory directory) (file-name-unquote default-directory))
+              (princ (ghostel-mux-test--text ghostel-mux--pane)))
+            (should (equal (file-name-as-directory directory)
+                           (file-name-unquote (ghostel-mux-context--verify)))))
+        (delete-directory directory)))))
+
+(ert-deftest mux-context-real-preserves-scalar-prompt-debug-and-vi ()
+  (ghostel-mux-test--with
+    (ghostel-mux-new-session "scalar")
+    (mux-context-test--ready)
+    (ghostel-mux-test--send
+     "set -o vi; PROMPT_COMMAND='__test_count=$((__test_count+1)); :'; trap ':' DEBUG\n")
+    (let ((p ghostel-mux--pane))
+      (ghostel-mux-context-enable "")
+      (ghostel-mux-context--verify)
+      (ghostel-mux-test--send "printf 'SCALAR_%s\\n' \"$__test_count\"; trap -p DEBUG\n")
+      (mux-context-test--prompt)
+      (should (string-match-p "SCALAR_[1-9]" (ghostel-mux-test--text p)))
+      (should (string-match-p "trap -- ':' DEBUG" (ghostel-mux-test--text p))))))

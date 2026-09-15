@@ -9,5 +9,6 @@
     (setq ghostel-module-directory (expand-file-name dir)))
   (setq ghostel-module-auto-install nil)
   (require 'ghostel)
-  (load (expand-file-name "test/ghostel-mux-tests.el" root) nil t))
+  (load (expand-file-name "test/ghostel-mux-tests.el" root) nil t)
+  (load (expand-file-name "test/ghostel-mux-context-tests.el" root) nil t))
 (ert-run-tests-batch-and-exit)

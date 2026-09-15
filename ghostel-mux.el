@@ -1,6 +1,6 @@
 ;;; ghostel-mux.el --- Tmux-style workspaces for Ghostel -*- lexical-binding: t; -*-
 
-;; Version: 0.3.1
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "29.1") (ghostel "0.40.0"))
 ;; Keywords: terminals, convenience
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -22,6 +22,13 @@
 (require 'ghostel)
 (declare-function consult--read "consult" (table &rest options))
 (defvar consult-preview-key)
+(autoload 'ghostel-mux-context-enable "ghostel-mux-context" nil t)
+(autoload 'ghostel-mux-context-dired "ghostel-mux-context" nil t)
+(autoload 'ghostel-mux-context-describe "ghostel-mux-context" nil t)
+(declare-function ghostel-mux-context--label "ghostel-mux-context" ())
+(defvar ghostel-mux-context-mode)
+(defvar ghostel-mux-context--state)
+
 
 (defgroup ghostel-mux nil "Terminal multiplexing inside Emacs." :group 'ghostel)
 (defcustom ghostel-mux-prefix-key (kbd "C-b")
@@ -1899,6 +1906,9 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
          (preview (frame-parameter nil 'ghostel-mux-preview))
          (copy (with-current-buffer (ghostel-mux--pane-buffer p)
                  (memq ghostel--input-mode '(copy emacs))))
+         (context (with-current-buffer (ghostel-mux--pane-buffer p)
+                    (when (fboundp 'ghostel-mux-context--label)
+                      (ghostel-mux-context--label))))
          (flags (concat
                  (when (frame-parameter nil 'ghostel-mux-prefix)
                    (propertize "[C-b] " 'face 'ghostel-mux-prefix))
@@ -1910,6 +1920,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                                     'face 'ghostel-mux-broadcast-marker))
                        ((ghostel-mux--window-sync w) "[S:-] "))
                  (when (ghostel-mux--window-zoom-state w) "[Z] ")
+                 (when (equal context "CTX?") "[CTX?] ")
                  (when (ghostel-mux--pane-log-error p) "[!LOG] ")
                  (unless (ghostel-mux--pane-live-p p) "[EXIT] ")))
          (width (max 1 (1- (window-total-width))))
@@ -1924,10 +1935,14 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
          (remaining (- width (string-width left) 1))
          (text (concat left (when (> remaining 2)
                               (concat " " (truncate-string-to-width
-                                           (ghostel-mux--pane-title p) remaining nil nil t))))))
+                                           (if context
+                                               (concat context " · " (ghostel-mux--pane-title p))
+                                             (ghostel-mux--pane-title p)) remaining nil nil t))))))
     (setq text (truncate-string-to-width text width))
     (add-text-properties 0 (length text)
-                         (list 'help-echo (ghostel-mux--scope-help p)) text)
+                         (list 'help-echo (concat (ghostel-mux--scope-help p)
+                                                  (when context
+                                                    (format "\nContext: %s. C-b I: route and directory." context)))) text)
     text))
 
 (defalias 'ghostel-mux--header #'ghostel-mux--status
@@ -2003,6 +2018,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                     "rename-session" "rename-window" "rename-pane" "kill-session" "kill-window"
                     "split-right" "split-below" "toggle-sync" "zoom" "layout" "layout-tiled"
                     "balance" "open-log" "attach-pane-session" "next-pane" "previous-pane"
+                    "context-enable" "context-dired" "context-describe"
                     "export-scrollback" "detach" "doctor" "select-buffer" "tree" "move-pane" "move-window" "toggle-auto-tile"))
          (name (completing-read "Mux command: " choices nil t)))
     (call-interactively (intern (concat "ghostel-mux-" name)))))
@@ -2023,6 +2039,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
     (princ "Input:    y SYNC toggle   C-b literal C-b   ] paste\n")
     (princ "History:  [ copy mode   = copy entire retained scrollback   e export   L raw log\n")
     (princ "Copy:     M-w copy/stay   C-w copy/exit   C-g clear selection   q exit\n")
+    (princ "Context:  i activate at empty Bash prompt   I details   j Dired (also C-j after activation)\n")
     (princ "Other:    : command selector   ? help   r refresh presentation\n\n")
     (princ "Ghostel:  g original C-c prefix (g C-e Emacs mode, g C-j semi-char)\n")
     (princ "C-b and C-b g are native Emacs prefixes, discoverable by which-key.\n\n")
@@ -2056,6 +2073,8 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
                  ("]" . ghostel-mux-paste) ("[" . ghostel-mux-copy-mode)
                  ("=" . ghostel-copy-all) ("e" . ghostel-mux-export-scrollback)
                  ("L" . ghostel-mux-open-log) (":" . ghostel-mux-command)
+                 ("i" . ghostel-mux-context-enable) ("I" . ghostel-mux-context-describe)
+                 ("j" . ghostel-mux-context-dired)
                  ("?" . ghostel-mux-help) ("r" . ghostel-mux-refresh)))
   (define-key ghostel-mux-command-map (kbd (car entry)) (cdr entry)))
 (define-key ghostel-mux-command-map ghostel-mux-prefix-key #'ghostel-mux-send-prefix)
@@ -2141,7 +2160,7 @@ participate.  Duplicate Emacs views of a buffer count as one recipient."
   "Report adapter availability and the current pane's recording backend."
   (interactive)
   (with-help-window "*Ghostel Mux Doctor*"
-    (princ (format "Emacs: %s\nGhostel library: %s\nMux: 0.1.9\n\n"
+    (princ (format "Emacs: %s\nGhostel library: %s\nMux: 0.4.0\n\n"
                    emacs-version (locate-library "ghostel")))
     (princ (format "Loaded ghostel definition: %s\nCreation API: %s\n\n"
                    (symbol-file 'ghostel 'defun)

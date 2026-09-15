@@ -1,4 +1,4 @@
-# Ghostel Mux 0.3.1
+# Ghostel Mux 0.4.0
 
 Un multiplexer per Emacs costruito sopra Ghostel: **sessioni → finestre →
 pannelli**, con tasti ispirati a tmux. Ogni pannello è un vero terminale
@@ -299,6 +299,9 @@ Anche `C-b g` è un prefisso nativo e mostra i propri sottocomandi.
 | `L` | Apre il file di log grezzo del pannello |
 | `t` | Mostra ora e data nell'echo area |
 | `r` | Aggiorna la presentazione dopo una modifica alle impostazioni |
+| `i` | Attiva il contesto nella shell Bash corrente, a prompt vuoto |
+| `I` | Mostra identità, directory e prefisso TRAMP del pannello |
+| `j` | Dired nel contesto verificato; anche `C-j` dopo l'attivazione |
 | `:` | Selettore dei comandi Mux, incluso `kill-session` e `doctor` |
 | `?` | Aiuto |
 
@@ -590,11 +593,22 @@ L'apertura di file remoti resta affidata a Ghostel/TRAMP; Mux non deduce una
 catena SSH/PSMP/sudo dall'output. Gli split usano la directory iniziale della
 finestra, evitando di avviare involontariamente una nuova shell TRAMP.
 
-Il progetto di awareness host/utente/directory e apertura Dired con `C-j`
-è descritto in [Contesto del pannello e TRAMP](docs/context-awareness.md).
-È una proposta: la 0.3.1 non aggiunge questo tasto né inietta codice remoto.
-La comunicazione del contesto richiede collaborazione della shell; l'accesso
-ai file richiede inoltre un percorso TRAMP valido.
+L'integrazione opzionale del contesto è disponibile dalla 0.4.0. Al prompt
+Bash **vuoto**, `C-b i` attiva la shell corrente: prefisso vuoto per il locale,
+`/ssh:server1:` dopo SSH oppure `/ssh:server1|sudo:oracle@server1:` dopo sudo.
+Poi `C-j` apre Dired nella directory aggiornata; `C-b I` mostra i dettagli.
+La barra mostra `utente@host` o `[CTX?]` quando il contesto è indisponibile.
+
+Ogni nuova shell richiede l'attivazione; i `cd` successivi e il ritorno alle
+shell già integrate sono seguiti automaticamente. Non vengono scritti file
+sul server né modificate le connessioni. Dired e `M-x compile`, `shell`,
+`shell-command`, `async-shell-command` richiedono una risposta fresca prima
+di usare quel contesto; nessun ripiego su localhost. Attivazione e richieste
+restano nel pannello selezionato anche con SYNC attiva.
+
+Leggi [Contesto del pannello e TRAMP](docs/context-awareness.md) per esempi,
+funzionamento, latenza e limiti, compresa la distinzione fra directory/utente
+e ambiente del processo terminale.
 
 Per bilanciare senza ricreare la disposizione usa `C-x +` o
 `C-b : balance`. `C-b M-5` ricostruisce invece la griglia dei terminali.
@@ -625,8 +639,8 @@ locale con SSH; non tornerai al prompt locale al termine della connessione.
 
 ## Verifiche e diagnosi
 
-La 0.3.1 è verificata con **Emacs 29.3 su Linux**, Bash e PTY reali:
-**91 test ERT superati su ciascuna versione Ghostel**.
+La 0.4.0 è verificata con **Emacs 30.1 su Linux**, Bash e PTY reali:
+**110 test ERT superati su ciascuna versione Ghostel**.
 La suite copre Ghostel 0.40.0 e 0.53.0, selettori Consult, input da tastiera,
 spostamenti, rinumerazione, anteprima dell'albero e ordine visivo del tiling.
 Le prove e i limiti sono riportati in [VALIDATION.md](VALIDATION.md);
@@ -651,8 +665,10 @@ GHOSTEL_MODULE_DIR=/percorso/modulo \
 make test
 ```
 
-I test usano soltanto shell e directory temporanee locali. Non contattano
-server aziendali e non scaricano moduli.
+I test usano shell e directory temporanee locali. Due prove di contesto
+eseguono anche sudo locale e TRAMP/sudo se `sudo -n true` è disponibile
+senza password; altrimenti vengono saltate. Non contattano server aziendali
+e non scaricano moduli.
 Per le prove Consult rendi disponibile Consult nel load-path.
 
 Per rimuovere Mux, chiudi le sessioni, rimuovi il blocco dall'init e riavvia

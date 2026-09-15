@@ -1,55 +1,96 @@
-# Verifica della versione 0.3.1
+# Verifica della versione 0.4.0
 
-**91 test ERT superati su ciascuna delle due versioni Ghostel, senza errori
-inattesi né test saltati.** Risultati in [test-results.txt](test-results.txt).
+**110 test ERT superati su Ghostel 0.40.0 e 0.53.0**, su ciascuna versione,
+senza errori inattesi né test saltati. Risultati in
+[test-results.txt](test-results.txt).
 
 ## Ambiente
 
-- Emacs 29.3, Linux x86_64, distribuzione portabile nel workspace.
-- Ghostel v0.40.0 e v0.53.0, ciascuno con il proprio modulo nativo Linux.
-- Bash locali con PTY reali; shell integration disattivata per non caricare
-  profili personali. Consult e which-key disponibili nel load-path.
-- Compilazione Lisp con i warning trattati come errori, Ghostel 0.53.0:
-  nessun warning di compilazione.
+- Emacs 30.1, Debian Linux x86_64.
+- Ghostel v0.40.0 e v0.53.0, ciascuno con il proprio modulo nativo ufficiale.
+- Bash 5.2.15 e terminali con PTY reali, profili e shell integration Ghostel
+  disattivati nella suite ordinaria. Consult e which-key disponibili.
+- Due test condizionali hanno eseguito realmente sudo locale: shell
+  `sudo -n -iu root`, ritorno al genitore e accesso TRAMP/sudo con Dired e
+  `shell-command`. In altri ambienti sono saltati se sudo senza password
+  non è disponibile.
+- Byte-compilazione di `ghostel-mux.el` e `ghostel-mux-context.el` con
+  warning trattati come errori, Ghostel 0.53: nessun warning.
+- Sintassi dello script verificata con Bash 4.2 e 5.2; `git diff --check`
+  senza errori.
 
-In questo runtime portabile i test sono stati eseguiti con
-`--eval '(setq comp-enable-subr-trampolines nil)'`: la compilazione nativa
-dei trampoline per le funzioni ridefinite dai test non riesce a caricare
-l'ambiente del sottoprocesso. Senza questa impostazione quattro test del
-completamento falliscono con `native-compiler-error`. È un adattamento del
-comando di test, non una modifica alla configurazione richiesta agli utenti.
-Il warning iniziale sul percorso Lisp di sistema mancante appartiene allo
-stesso runtime; il load-path effettivo punta ai file del bundle.
+Le prove sono state lanciate con
+`--eval '(setq comp-enable-subr-trampolines nil)'` per tenere la suite
+indipendente dalla compilazione nativa delle funzioni ridefinite dai test.
+È un'impostazione del comando di test, non un requisito nell'init utente.
 
-## Regressioni della 0.3.1
+## Contesto: prove reali e regressioni
 
-- Otto pannelli dopo le creazioni automatiche: ordine crescente nelle
-  posizioni visive, da sinistra a destra per riga e dall'alto al basso.
-- Pannello sostituito da scratch, zoom e poi vera keyboard macro C-b M-5:
-  tutti i pannelli tornano nell'ordine previsto, conservando la selezione.
-- Riordino nell'albero, trasferimento da un'altra sessione e chiusura:
-  ordine visivo coerente con la lista dei pannelli e numeri contigui.
-- Passaggi fra layout orizzontale, verticale e tiled con cinque pannelli:
-  il terminale selezionato resta lo stesso e l'ordine è rispettato.
+Le 19 nuove prove coprono:
 
-Ripristinando soltanto la vecchia funzione di tiling, il test degli otto
-pannelli fallisce sul confronto delle posizioni visive. La regressione
-rileva quindi il difetto precedente, non soltanto la presenza dei buffer.
+- Attivazione, cambio directory e richiesta di risposta fresca su PTY.
+- Percorsi Unicode, spazi e virgolette; protocollo esadecimale; un percorso
+  locale con sintassi simile a TRAMP resta locale.
+- Conservazione letterale di alias, porte e catene multihop senza
+  registrare proxy; rifiuto di un utente sudo incoerente.
+- Rifiuto di sequenze vecchie, token e identificativi di richiesta errati,
+  messaggi malformati e cambi inattesi dell'identità della shell.
+- Shell figlia non integrata: azione bloccata anche simulando un vecchio
+  prompt arrivato in ritardo; nuova attivazione e ripristino del genitore.
+- SYNC con due terminali: attivazione e verifica locali; invalidazione di
+  ciascun destinatario dell'input, anche via scrittura PTY diretta;
+  durante lo zoom la directory del pannello nascosto resta invariata.
+- Binding C-j, Dired reale, shell-command, compilazione e nuovo buffer shell.
+- C-g e scomparsa del buffer durante una richiesta: nessuna azione avviata
+  e nessuna modifica accidentale al buffer che riceve il focus.
+- PROMPT_COMMAND scalare e array, trap DEBUG preesistente e Readline in vi;
+  attivazione bloccata con PROMPT_COMMAND readonly.
+- sudo reale, Dired via TRAMP/sudo e comando `id -un; pwd` eseguito come root
+  in /root, attraverso una connessione separata da quella del terminale.
 
-Restano superati gli 88 test precedenti, inclusi SYNC limitata ai pannelli
-visibili, zoom, input e copia, preview Consult, albero, spostamenti,
-rinumerazione, processi, scrollback e log.
+Il test sulla scomparsa del buffer ha inizialmente rilevato una modifica
+errata della directory del buffer successivo: ora l'attesa e la pulizia
+restano legate al buffer originale.
 
-## Limiti e verifiche precedenti
+Restano superati i 91 test precedenti: ordine del tiling, processi,
+scrollback, log, SYNC solo visibile, zoom, copia, Consult, albero, spostamenti
+e rinumerazione.
 
-La 0.3.1 è verificata in batch con finestre Emacs e terminali reali. Non è
-stata ripetuta la verifica grafica del mouse: le schermate nel README
-provengono dalla 0.3.0 e precedono il fix dell'ordine dei pannelli.
-Le prove su Emacs 30.1, drag grafico, installazione use-package e reload
-della 0.3.0 sono descritte nel
-[rapporto precedente](https://github.com/SweatierKey/ghostel-mux/blob/a735d2d403ffe7f860efd721490c317c4fa7dd29/VALIDATION.md).
+## Bash 4.2
 
-Nessuna di queste prove verifica server aziendali, Windows/WSL, CyberArk,
-SSH remoto o cambi di utenza. Il documento
-[Contesto del pannello e TRAMP](docs/context-awareness.md) è una proposta
-basata sul codice e sui protocolli: l'integrazione non è implementata.
+È stato compilato GNU Bash 4.2.0 dal sorgente ufficiale in un ambiente di
+prova isolato, senza installarlo sul sistema dell'utente.
+
+**18 test di contesto su 18 superati** con quel Bash come shell dei pannelli,
+Ghostel 0.53. È esclusa dalla selezione la prova PROMPT_COMMAND array,
+funzionalità che richiede Bash 5.1+. Le shell sudo e la shell figlia esplicita
+usano il Bash di sistema.
+
+Questa prova ha rilevato il limite di Bash 4.2 nella risoluzione dei binding
+lunghi di `bind -x`. Il percorso compatibile usa una macro Readline verso
+`C-x C-^`; i test verificano la risposta fresca, anche in modalità vi.
+Il test della directory Unicode invia un letterale Bash ASCII che costruisce
+i byte UTF-8: verifica il percorso comunicato senza dipendere dalle
+impostazioni di input multibyte del vecchio Readline.
+
+Per ripetere la selezione con un Bash alternativo imposta
+`GHOSTEL_TEST_BASH=/percorso/bash` e usa il selettore ERT:
+
+```elisp
+(and "^mux-context-"
+     (not mux-context-real-preserves-prompt-array-debug-and-vi))
+```
+
+## Limiti
+
+Non è una verifica di RHEL7, Windows/WSL, server aziendali, SSH remoto,
+CyberArk o bridge aziendali. La prova dell'utente con printf conferma
+il trasporto OSC nel suo percorso, anche dopo sudo; attivazione completa,
+risposta Readline e apertura Dired vanno ancora provate su quel percorso.
+
+Non è stata ripetuta la verifica grafica del mouse: schermate README dalla
+0.3.0; GIF/video dalla 0.1.9. Le verifiche precedenti sono conservate nel
+[rapporto 0.3.1](https://github.com/SweatierKey/ghostel-mux/blob/c8dfe18ab41be81300f8eb9e908e8cda5186a000/VALIDATION.md).
+
+Per il funzionamento e i limiti d'uso leggi
+[Contesto del pannello e TRAMP](docs/context-awareness.md).

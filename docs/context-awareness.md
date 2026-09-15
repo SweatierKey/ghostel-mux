@@ -1,124 +1,145 @@
-# Contesto del pannello e TRAMP
+# Contesto del pannello e TRAMP — 0.4.0
 
-**Proposta, non implementata nella 0.3.1.** Obiettivo: dal terminale,
-`C-j` apre Dired sull'host, con l'utente effettivo e nella directory corrente;
-i comandi Emacs compatibili con TRAMP usano lo stesso contesto.
+L'integrazione è **opzionale e attivata esplicitamente nella shell corrente**.
+Segue host, utente e directory; associa quei dati a un percorso TRAMP scelto
+da te. Non modifica SSH, PSMP o sudo e non installa file sul server.
 
-## Cosa è possibile osservare oggi
+## Uso
 
-| Situazione | Informazioni disponibili senza aggiungere integrazioni |
+Posizionati su un **prompt Bash interattivo vuoto**, senza comandi parziali,
+password da inserire o programmi a tutto schermo in esecuzione. Premi
+`C-b i` e indica il prefisso TRAMP della shell nella quale ti trovi:
+
+| Shell corrente | Prefisso da inserire |
 | --- | --- |
-| Shell locale avviata da Ghostel | Con shell integration attiva e supportata, Ghostel segue la directory |
-| Terminale avviato da un percorso TRAMP | Emacs conosce già il percorso di accesso e l'utente di login |
-| `ssh server1` digitato nella shell locale | Il processo locale può suggerire una destinazione, ma non certifica login riuscito, directory o utente effettivo |
-| `cd` nella shell remota | Aggiornabile se quella shell comunica la directory; SSH da solo non lo segnala |
-| `sudo su -iu oracle` | Serve una comunicazione dalla nuova shell per conoscere il contesto effettivo |
-| Ritorno con `exit`, SSH annidati | Il contesto va aggiornato dalla shell che torna attiva |
+| Locale, stesso utente di Emacs | Lascia vuoto e premi Invio |
+| Dopo `ssh server1` | `/ssh:server1:` |
+| Su server1 dopo `sudo -iu oracle` | `/ssh:server1\|sudo:oracle@server1:` |
+| Collegamento con più passaggi | Copia il prefisso TRAMP che usi già con successo |
 
-Una PTY trasporta input e output. Il protocollo SSH non aggiunge un flusso
-standard di notifiche su `cd` e cambi di identità. `SSH_CONNECTION` contiene
-indirizzi e porte; `SSH_TTY` identifica il terminale remoto. Queste variabili
-esistono nella shell remota e non aggiornano automaticamente Emacs.
-Riferimenti: [OpenSSH, ambiente](https://man.openbsd.org/ssh.1#ENVIRONMENT),
-[protocollo dei canali SSH](https://www.rfc-editor.org/rfc/rfc4254#section-6).
+Le barre verticali nella tabella fanno parte dei prefissi TRAMP.
+Un nome completo come `/ssh:server1:/home/me/` è accettato: viene conservata
+la parte di connessione; la directory arriva dalla shell.
+Gli alias e gli utenti omessi restano tali, quindi SSH/TRAMP applicano la
+tua configurazione. Non serve espandere gli alias o inserire l'utente
+quando normalmente non lo specifichi. La cronologia facilita il riuso.
 
-Leggere il prompt o riconoscere i comandi digitati non è sufficiente: un
-login può fallire, un alias può nascondere un comando e un programma può
-stampare testo simile a un prompt. Questi indizi non devono scegliere
-l'host sul quale aprire file o eseguire comandi.
+Dopo l'attivazione:
 
-## Quanto offre già Ghostel
+- `C-j` oppure `C-b j` apre Dired nella directory corrente.
+- `M-x compile`, `M-x shell-command`, `M-x async-shell-command` e
+  `M-x shell`, richiamati dal terminale, usano quel contesto.
+- La barra mostra `utente@host` quando c'è spazio. `[CTX?]` indica
+  un contesto non disponibile. `C-b I` mostra directory, identità,
+  prefisso esatto ed eventuale errore.
+- Un normale `cd` aggiorna automaticamente la directory al prompt seguente.
 
-Ghostel usa OSC 7 per aggiornare `default-directory` quando riceve host e
-directory dalla shell. L'integrazione Bash fornita nella versione esaminata
-emette `file://HOST/PATH`: non comunica l'utente effettivo dopo `sudo`.
+**Ogni nuova shell richiede una nuova attivazione**, anche dopo SSH, sudo,
+su o un altro Bash. Tornando con `exit` a una shell già integrata,
+l'associazione precedente riprende al suo prompt. Puoi correggere il
+prefisso ripetendo `C-b i`. Anche la prima shell locale richiede
+l'attivazione: questa versione non invia codice automaticamente.
 
-`ghostel-tramp-shell-integration` abilita l'iniezione di piccoli file
-temporanei per i terminali avviati tramite TRAMP. Non rende automaticamente
-aware qualsiasi `ssh` digitato in una shell locale. La nuova shell avviata
-da `sudo` deve a sua volta eseguire l'integrazione.
-Vedi la [documentazione Ghostel](https://dakra.github.io/ghostel/) e i
-sorgenti [shell integration](https://github.com/dakra/ghostel/blob/v0.53.0/lisp/ghostel-shell.el)
-e [tracking della directory](https://github.com/dakra/ghostel/blob/v0.53.0/lisp/ghostel.el).
+Esempio: attiva la shell locale con prefisso vuoto; entra in server1,
+attiva con `/ssh:server1:`; passa a oracle e attiva con
+`/ssh:server1|sudo:oracle@server1:`. I successivi `cd` e i ritorni alle
+shell precedenti vengono seguiti senza riscrivere il prefisso.
 
-Il tracking corrente riutilizza un prefisso TRAMP già presente: per SSH
-annidati non basta quindi copiare ciecamente `default-directory`. Occorre
-verificare che host osservato e percorso di accesso corrispondano.
+## Che cosa viene inviato
 
-## Conoscere il contesto e potervi accedere sono due cose diverse
+Mux legge il file locale [ghostel-mux-context.bash](../shell/ghostel-mux-context.bash)
+e lo invia come un comando Bash nella PTY selezionata. Il comando definisce
+funzioni, variabili, un'aggiunta a `PROMPT_COMMAND` e una combinazione
+privata di Readline **nella memoria di quella shell**. Non scrive profili,
+file di configurazione, wrapper o agenti remoti. Il comando può comparire
+nella normale history o nei log già attivi.
 
-La notifica `oracle@server1:/u01/app` descrive dove si trova la shell, ma
-non spiega come arrivarci. L'alias SSH, eventuali proxy e l'utente di login
-devono essere conservati separatamente dall'utente effettivo.
+L'attivazione rileva hostname e utente tramite `hostname` e `id -un`.
+Ai prompt successivi invia directory, identità, PID e numero di sequenza
+con un messaggio OSC, usando soltanto builtin Bash. Conserva il
+`PROMPT_COMMAND` esistente, scalare o array; non modifica `PS1` o il
+trap `DEBUG`. Un `PROMPT_COMMAND` readonly impedisce l'attivazione.
+Su Bash 4.2 usa anche la sequenza Readline `C-x C-^` come passaggio interno,
+riservandola nella shell attivata: aggira il limite di quella versione sui
+binding lunghi di `bind -x`. Un `PROMPT_COMMAND` array richiede Bash 5.1+.
 
-Per un accesso SSH semplice seguito da sudo, un percorso TRAMP possibile è:
+L'OSC usa il canale Ghostel `52;e` e un singolo ricevitore esplicitamente
+autorizzato in quel buffer. I campi sono dati codificati in esadecimale,
+non espressioni Lisp da eseguire. Il ricevitore non apre file o connessioni.
+I prefissi TRAMP restano in Emacs e non vengono inseriti nel codice Bash.
 
-```text
-/ssh:server1|sudo:oracle@server1:/u01/app/
+## Disponibilità e verifica prima di agire
+
+L'input del terminale invalida il contesto finché non arriva un nuovo prompt.
+Questo evita di continuare a presentare come attuale una directory osservata
+prima di un SSH, sudo o comando ancora in esecuzione.
+
+Inoltre, **ogni apertura Dired tramite i tasti Mux e ogni comando elencato
+sopra richiede una risposta nuova**, con un identificativo specifico per
+quell'azione. La richiesta usa la combinazione privata di Readline nella
+stessa PTY: non avvia una seconda connessione SSH e non invia un comando
+di shell né un Invio. Un vecchio prompt o una risposta ritardata a un'altra
+richiesta non basta per procedere.
+
+Se manca la risposta, arriva da un'altra shell, l'identità cambia o premi
+`C-g`, l'azione si interrompe. Non ripiega su localhost. La directory del
+buffer diventa un percorso bloccato, così le normali operazioni sui file
+non usano silenziosamente la directory precedente.
+
+Un programma o una shell senza hook potrebbe mostrare i caratteri di una
+richiesta non riconosciuta. In quel caso torna a un prompt vuoto, pulisci
+l'eventuale testo parziale e attiva l'integrazione. Il protocollo è
+collaborazione con la shell, non un sistema di autenticazione dell'output.
+
+L'attesa massima è personalizzabile:
+
+```elisp
+(setq ghostel-mux-context-timeout 6)
 ```
 
-Il primo hop usa il login SSH configurato; il secondo richiede a sudo il
-cambio a `oracle`. È diverso da tentare un login SSH diretto come oracle.
-Questo esempio richiede che TRAMP possa ripetere la procedura e che la
-politica sudo la consenta: il solo fatto che una shell oracle sia già
-aperta non basta. Una regola che autorizza unicamente una specifica
-invocazione di `su` può richiedere un metodo dedicato.
+Le notifiche dei prompt non fanno accessi TRAMP. La verifica aggiunge un
+andata/ritorno sulla connessione terminale già aperta; solo dopo Dired o
+il comando richiesto effettuano il normale accesso locale/TRAMP.
 
-Dired/TRAMP usa una propria connessione o un proprio canale di esecuzione;
-non adotta genericamente la PTY interattiva di Ghostel. ControlMaster può
-permettere la condivisione del trasporto, se configurato e supportato dal
-percorso di accesso. Non trasferisce lo stato della shell né garantisce
-che un'autenticazione sudo sulla sua TTY valga per TRAMP. Con PSMP o altri
-gateway aziendali la riproducibilità del percorso va verificata sul setup
-reale. Nessuna promessa di prima apertura istantanea.
-Vedi [manuale TRAMP: hop, condivisione SSH e processi remoti](https://github.com/emacs-mirror/emacs/blob/master/doc/misc/tramp.texi).
+## Accesso, identità e limiti
 
-## Integrazione proposta
+- Il prefisso è un'associazione **esplicita**, non una ricostruzione della
+  catena SSH. Hostname remoto e alias di connessione possono essere diversi;
+  Mux non può dimostrare che un alias punti all'host osservato.
+- Per un prefisso locale controlla hostname locale e UID di Emacs.
+  Per un ultimo passaggio sudo/su/doas controlla anche l'utente dichiarato.
+  Non riscrive gli username di accesso, che possono avere sintassi PSMP.
+- TRAMP apre o riusa la propria connessione. Non adotta il processo SSH
+  del terminale. Host, utente e directory non implicano il riuso di variabili
+  esportate, virtualenv, stato del processo o ambiente Oracle della PTY.
+- `shell` crea un buffer separato; non riusa implicitamente una shell già
+  aperta con un'altra identità. Le compilazioni hanno nomi legati al contesto.
+- Gli altri comandi compatibili con TRAMP possono usare
+  `default-directory` aggiornato al prompt; **non tutti i pacchetti Emacs
+  ricevono la verifica fresca** prevista per i quattro comandi elencati.
+- Una volta aperto Dired o un buffer di compilazione, quel buffer conserva
+  il suo contesto. Non segue i futuri `cd` del terminale.
+- L'attivazione richiede Bash 4.2+ interattivo con Readline. Zsh, fish,
+  applicazioni a tutto schermo e shell senza prompt hook non sono coperti.
+  La prova aziendale con `printf` verifica il trasporto OSC; il giro
+  completo di attivazione e richiesta Readline va provato sul tuo percorso.
+- Disattivare il minor mode ripristina la directory precedente; le funzioni
+  nella shell restano fino alla sua chiusura. Per una sessione pulita chiudi
+  quella shell. Il supporto Ghostel ordinario resta disponibile nei pannelli
+  in cui questa integrazione non viene attivata.
 
-1. Una piccola funzione nella shell invia al prompt host, utente effettivo
-   e directory assoluta, come dati strutturati. Nessun comando remoto di
-   polling a ogni pressione di un tasto.
-2. Mux conserva il contesto per pannello e lo associa a un percorso di
-   accesso conosciuto. Le notifiche non autorizzano nuovi hop o elevazioni
-   di privilegi e non contengono Lisp da valutare.
-3. `C-j` apre Dired soltanto con un contesto valido e un percorso risolto.
-   Un login o cambio shell non ancora identificato rende il contesto
-   indisponibile: niente ripiego silenzioso sulla directory locale o
-   sull'ultimo host noto. Questo vale anche se la nuova shell non emette
-   notifiche. Va progettato e verificato il segnale di sospensione dalla
-   shell di origine, prima di consentire operazioni dal pannello.
-4. TRAMP viene contattato solo quando un'operazione lo richiede, riusando
-   le sue connessioni già aperte quando possibile. Le notifiche e il
-   ridisegno della barra non eseguono accessi di rete.
-5. Il percorso alimenta `default-directory` del buffer. Dired, compile e
-   nuovi processi shell compatibili con TRAMP possono partire lì. Buffer
-   shell già esistenti e `recompile` mantengono il proprio contesto: non
-   vanno riciclati indiscriminatamente fra pannelli o utenti.
-6. Host e utente compaiono in forma compatta, con directory completa nei
-   dettagli. Un contesto non verificato è riconoscibile. L'installazione
-   dell'integrazione e i comandi di contesto sono operazioni locali al
-   pannello selezionato, mai trasmesse dal broadcast SYNC.
+## SYNC e struttura Mux
 
-"Stesso contesto" qui significa host, utente e directory. Variabili
-esportate a mano, virtualenv, funzioni, alias e altro stato della shell
-non passano automaticamente a un nuovo processo TRAMP. I pacchetti Emacs
-che ignorano TRAMP richiedono un adattatore; non basta una modifica globale
-per rendere remoto qualsiasi comando.
+Attivazione, risposte automatiche e richieste di verifica restano nel solo
+pannello selezionato. Non si propagano tramite SYNC.
 
-## Il compromesso da scegliere prima di implementare
+L'input ordinario segue le regole Mux: solo i pannelli vivi e visibili della
+finestra attiva; durante lo zoom solo quello visibile. Ogni destinatario
+invalida e aggiorna il proprio contesto separatamente.
 
-**Zero modifiche persistenti sui server è un obiettivo ragionevole; zero
-cooperazione della shell con rilevamento completo e affidabile no.**
+Il contesto appartiene al buffer del terminale: spostare quel pannello tra
+finestre o sessioni non cambia la sua shell o il prefisso assegnato.
 
-La prima opzione da valutare è una funzione caricata in memoria, solo
-nella shell corrente, senza modificare `.bashrc`, `sshd_config` o installare
-demoni. Lasciando invariati i comandi SSH e sudo, serve però un'attivazione
-esplicita in ogni nuova shell remota e dopo ogni cambio di utenza. Per
-renderla automatica occorre intervenire sul modo di avviare quelle shell
-o sui loro profili: è un compromesso ulteriore, non implicito.
+## Verifica
 
-Anche un'attivazione temporanea invia istruzioni alla shell e può comparire
-nella cronologia o nell'audit del terminale. Deve avvenire su richiesta,
-al prompt, sul solo pannello scelto; non durante una password o un programma
-interattivo. Compatibilità Bash, ritorno da sudo/SSH, gateway e autenticazione
-TRAMP devono essere verificati prima di dichiarare completo lo use case.
+Vedi [VALIDATION.md](../VALIDATION.md) per ambiente, prove reali e limiti.

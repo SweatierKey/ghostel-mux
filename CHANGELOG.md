@@ -1,3 +1,23 @@
+# 0.4.0
+
+- Contesto opzionale per pannello: C-b i attiva un hook nella memoria della
+  shell Bash corrente, associato esplicitamente a un prefisso TRAMP.
+  Nessun file remoto, wrapper SSH/sudo o modifica ai profili.
+- Directory, host e utente aggiornati ai prompt; ritorno automatico alle
+  associazioni delle shell genitrici già integrate.
+- C-j / C-b j apre Dired; compile, shell-command, async-shell-command e shell
+  richiedono una risposta fresca prima di usare il contesto. Nessun ripiego
+  su localhost quando manca una risposta.
+- Attivazione e richieste restano nel pannello selezionato anche con SYNC.
+  Ogni terminale destinatario dell'input invalida il proprio contesto.
+- Barra con utente@host e CTX?; C-b I mostra identità e percorso completo.
+  Comandi disponibili anche nel selettore C-b : e nei prefissi which-key.
+- Bash 4.2 supportato tramite un adattamento Readline; hook scalari o array
+  preservati, trap DEBUG invariato. Array PROMPT_COMMAND richiede Bash 5.1+.
+- 110 test ERT su Ghostel 0.40 e 0.53; 18 ulteriori esecuzioni di contesto
+  su Bash 4.2. Dired e comandi verificati anche tramite TRAMP/sudo locale.
+  Nessuna prova completa sul percorso SSH aziendale.
+
 # 0.3.1
 
 - Tiling ordinato come l'albero: da sinistra a destra per riga, dall'alto
